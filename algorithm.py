@@ -1,7 +1,15 @@
 import pandas
-from typing import Tuple, Type
+import logging
+from disjoint_set import DisjointSet
 
 from model import Source, Categorization, Constants
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M:%S')
+
+
+def set_logging_level(state):
+    logger.setLevel(state)
 
 
 def read_excel(filename: str) -> Source:
@@ -102,11 +110,11 @@ def find_onyomi(row: pandas.DataFrame, vr_cluster: pandas.DataFrame, categorizat
     vr_crowns = row["ON READING"].split("、")
     onyomi = vr_cluster[vr_cluster["ON READING"].isin(vr_crowns)]
     if onyomi.empty:
-        #         print("4. rule - 3rd condition")
+        logger.info("4. rule - 3rd condition")
         vr_third_cluster = source.df_kanji[source.df_kanji["CHAR"] == row["COMPONENTS2"]]
         if len(vr_third_cluster.index) > 0:
             if len(vr_third_cluster.index) > 1:
-                #                 print("kanji > 1")
+                logger.info("kanji > 1")
                 max_srl_kanji = vr_third_cluster[vr_third_cluster["SRL"] == vr_third_cluster["SRL"].max()].iloc[0]
                 row["TYPE"] = "VR"
 
@@ -116,7 +124,7 @@ def find_onyomi(row: pandas.DataFrame, vr_cluster: pandas.DataFrame, categorizat
                     categorization.queue[max_srl_kanji["CHAR"]] = []
                     categorization.queue[max_srl_kanji["CHAR"]].append(row)
             else:
-                #                 print("kanji = 1")
+                logger.info("kanji = 1")
                 row["TYPE"] = "VR"
                 max_srl_kanji = vr_third_cluster.iloc[0]
                 if max_srl_kanji["CHAR"] in categorization.queue.keys():
@@ -128,8 +136,9 @@ def find_onyomi(row: pandas.DataFrame, vr_cluster: pandas.DataFrame, categorizat
             fifth_rule(row, categorization, source)
     else:
         if len(onyomi.index) > 1:
-            #             print("kanji > 1")
+            logger.info("kanji > 1")
             max_srl_kanji = onyomi[onyomi["SRL"] == onyomi["SRL"].max()].iloc[0]
+            logger.info("max srl kanji: {}".format(max_srl_kanji["CHAR"]))
             row["TYPE"] = "VR"
 
             if max_srl_kanji["CHAR"] in categorization.queue.keys():
@@ -138,7 +147,7 @@ def find_onyomi(row: pandas.DataFrame, vr_cluster: pandas.DataFrame, categorizat
                 categorization.queue[max_srl_kanji["CHAR"]] = []
                 categorization.queue[max_srl_kanji["CHAR"]].append(row)
         else:
-            #             print("kanji = 1")
+            logger.info("kanji = 1")
             row["TYPE"] = "VR"
             max_srl_kanji = onyomi.iloc[0]
             if max_srl_kanji["CHAR"] in categorization.queue.keys():
@@ -149,12 +158,12 @@ def find_onyomi(row: pandas.DataFrame, vr_cluster: pandas.DataFrame, categorizat
 
 
 def seventh_rule(row: pandas.DataFrame, categorization: Categorization):
-    #     print("TODO 7. rule")
+    logger.warning("TODO 7. rule")
     append_categorization(Constants.other_grp, row, False, categorization)
 
 
 def sixth_rule(row: pandas.DataFrame, categorization: Categorization, source: Source):
-    #     print("6. rule")
+    logger.info("6. rule")
     vr_cluster_1_2 = pandas.concat([
         find_cluster_1_2_components("COMPONENTS1", row, source),
         find_cluster_1_2_components("COMPONENTS2", row, source)
@@ -175,7 +184,7 @@ def sixth_rule(row: pandas.DataFrame, categorization: Categorization, source: So
 
 
 def fifth_rule(row: pandas.DataFrame, categorization: Categorization, source: Source):
-    #     print("5. rule")
+    logger.info("5. rule")
     group_stem = source.df_stem[
         (source.df_stem["STEM KANJI"] == row["COMPONENTS1"]) |
         (source.df_stem["STEM KANJI"] == row["COMPONENTS2"]) |
@@ -195,7 +204,7 @@ def fifth_rule(row: pandas.DataFrame, categorization: Categorization, source: So
 
 
 def fourth_rule(row: pandas.DataFrame, categorization: Categorization, source: Source):
-    #     print("4. rule")
+    logger.info("4. rule")
     vr_cluster = pandas.concat([
         find_cluster_components("COMPONENTS2", row, source),
         find_cluster_components("COMPONENTS3", row, source),
@@ -213,40 +222,33 @@ def fourth_rule(row: pandas.DataFrame, categorization: Categorization, source: S
         if vr_all_cluster.empty:
             fifth_rule(row, categorization, source)
         else:
-            #             print("vr all cluster")
+            logger.info("vr all cluster")
             find_onyomi(row, vr_all_cluster, categorization, source)
     else:
-        #         print("vr clusters")
+        logger.info("vr clusters")
         find_onyomi(row, vr_cluster, categorization, source)
 
 
-def find_char_categorization(char: str, categorization: Categorization):
-    for key in categorization.result:
-        for ch in categorization.result[key]:
-            if ch["CHAR"] == char:
-                return key
-            else:
-                continue
-
-
 def categorize_queue(categorization: Categorization):
+    ds = DisjointSet()
+    for key in categorization.result:
+        for char in categorization.result[key]:
+            ds.union(char["CHAR"], key)
     for key in categorization.queue:
-        tmp = find_char_categorization(key, categorization)
-        if tmp is None:
-            print(key)
-        else:
-            tmp_dict = categorization.result[tmp]
-            for ch in categorization.queue[key]:
-                tmp_dict.append(ch)
-            # categorization.result[tmp].deepcopy(tmp_dict)
-            del categorization.queue[key]
+        for char in categorization.queue[key]:
+            ds.union(char["CHAR"], key)
+
+    print(ds)
+    for key in categorization.queue:
+        for char in categorization.queue[key]:
+            categorization.result[ds.find(char["CHAR"])].append(char)
 
 
 def categorize_kanji(row: pandas.DataFrame, categorization: Categorization, source: Source):
     first_rule = find_keyword(row, source)
     second_rule = find_stem(row, source)
     if first_rule != "none":
-        #         print("1. rule")
+        logger.info("1. rule")
         if row["TYPE"] == "MEAN":
             append_categorization(first_rule, row, False, categorization)
         else:
@@ -259,7 +261,7 @@ def categorize_kanji(row: pandas.DataFrame, categorization: Categorization, sour
                     print("ERROR: missing grp")
     else:
         if second_rule != "none":
-            #             print("2. rule")
+            logger.info("2. rule")
             if row["TYPE"] == "STEM":
                 append_categorization(second_rule, row, True, categorization)
             else:
@@ -267,22 +269,20 @@ def categorize_kanji(row: pandas.DataFrame, categorization: Categorization, sour
         else:
             components = source.df_kanji[
                 (source.df_kanji["COMPONENTS1"] == row["CHAR"]) | (source.df_kanji["COMPONENTS2"] == row["CHAR"])]
-            #             print("components count: " + str(len(components.index)))
+            logger.info("components count: " + str(len(components.index)))
             if components.empty:
                 fourth_rule(row, categorization, source)
             else:
-                #                 print("3. rule")
+                logger.info("3. rule")
                 vr_crowns = row["ON READING"].split("、")
-                #                 print(vr_crowns)
                 onyomi = components[components["ON READING"].isin(vr_crowns)]
                 if onyomi.empty:
-                    #                     print("onyomi empty")
+                    logger.info("onyomi empty")
                     fourth_rule(row, categorization, source)
                 else:
-                    #                     print("3. rule a) b)")
+                    logger.info("3. rule a) b)")
                     if len(onyomi.index) > 1:
-                        #                         print("kanji > 1")
-                        #                         print(onyomi)
+                        logger.info("kanji > 1")
                         max_srl_kanji = onyomi[onyomi["SRL"] == onyomi["SRL"].max()].iloc[0]
                         row["TAG"] = "CROWN_TAG"
                         row["TYPE"] = "VR"
@@ -293,7 +293,7 @@ def categorize_kanji(row: pandas.DataFrame, categorization: Categorization, sour
                             categorization.queue[max_srl_kanji["CHAR"]] = []
                             categorization.queue[max_srl_kanji["CHAR"]].append(row)
                     else:
-                        #                         print("kanji = 1")
+                        logger.info("kanji = 1")
                         row["TAG"] = "CROWN_TAG"
                         row["TYPE"] = "VR"
                         max_srl_kanji = onyomi.iloc[0]

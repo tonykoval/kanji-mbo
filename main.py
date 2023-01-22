@@ -1,19 +1,22 @@
+import logging
+
 import algorithm
 
+algorithm.set_logging_level(logging.INFO)
+# algorithm.set_logging_level(logging.WARNING)
 source = algorithm.read_excel("1500 KANJI COMPONENTS - ver. 1.2.xlsx")
 
 categorization = algorithm.init_categorization(source)
 
-# algorithm.categorize_kanji(source.df_kanji[source.df_kanji["CHAR"] == '憶'].iloc[0], categorization, source)
-# algorithm.categorize_kanji(source.df_kanji[source.df_kanji["CHAR"] == '屋'].iloc[0], categorization, source)
+algorithm.categorize_kanji(source.df_kanji[source.df_kanji["CHAR"] == '第'].iloc[0], categorization, source)
+algorithm.categorize_kanji(source.df_kanji[source.df_kanji["CHAR"] == '題'].iloc[0], categorization, source)
 # algorithm.categorize_kanji(source.df_kanji[source.df_kanji["CHAR"] == '億'].iloc[0], categorization, source)
 
-for i in range(len(source.df_kanji)):
-    kanji = source.df_kanji.loc[i]
-    # print(kanji["CHAR"])
-    algorithm.categorize_kanji(kanji, categorization, source)
+# for i in range(len(source.df_kanji)):
+#     kanji = source.df_kanji.loc[i]
+#     algorithm.categorize_kanji(kanji, categorization, source)
 
-algorithm.categorize_queue(categorization)
+# algorithm.categorize_queue(categorization)
 
 print("categorization")
 for key in categorization.result:
