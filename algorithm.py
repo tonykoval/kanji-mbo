@@ -281,16 +281,16 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
 def categorize_queue(categorization: Categorization):
     ds = DisjointSet()
     for key in categorization.result:
-        for char in categorization.result[key]:
-            ds.union(char[ExcelColumn.char], key)
+        for kanji in categorization.result[key]:
+            ds.union(kanji.char, key)
     for key in categorization.queue:
-        for char in categorization.queue[key]:
-            ds.union(char[ExcelColumn.char], key)
+        for kanji in categorization.queue[key]:
+            ds.union(kanji.char, key)
 
     print(ds)
     for key in categorization.queue:
-        for char in categorization.queue[key]:
-            categorization.result[ds.find(char[ExcelColumn.char])].append(char)
+        for kanji in categorization.queue[key]:
+            categorization.result[ds.find(kanji.char)].append(kanji)
 
 
 def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Source):
