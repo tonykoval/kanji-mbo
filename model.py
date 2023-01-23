@@ -38,4 +38,32 @@ class Constants:
     special_grp = '78 special'
     other_grp = '77 other'
     visual_grp = 'visual'
+    mean = "MEAN"
+    special = "SPECIAL"
+    other = "OTHER"
+    stem = "STEM"
+    crown_tag = "CROWN_TAG"
+    vr = "VR"
+    form = "FORM"
+    visual = "VISUAL"
 
+
+class ExcelColumn:
+    char = "CHAR"
+    component1 = "COMPONENTS1"
+    component2 = "COMPONENTS2"
+    component3 = "COMPONENTS3"
+    component4 = "COMPONENTS4"
+    component5 = "COMPONENTS5"
+    on_reading = "ON READING"
+    kun_reading = "KUN READING"
+    keyword = "KEYWORD"
+    srl = "SRL"
+    type = "TYPE"
+    freq = "FREQ"
+    tags = "TAGS"
+    group = "GROUP"
+    stem_kanji = "STEM KANJI"
+    on_reading_delimiter = "、"
+    list_columns = ["CHAR", "COMPONENTS1", "COMPONENTS2", "COMPONENTS3", "COMPONENTS4", "COMPONENTS5", "ON READING",
+                     "KUN READING", "KEYWORD", "SRL", "TYPE", "FREQ", "TAGS"]
