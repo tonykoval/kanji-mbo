@@ -259,7 +259,7 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
         find_cluster_components(ExcelColumn.component3, kanji, source),
         find_cluster_components(ExcelColumn.component4, kanji, source),
         find_cluster_components(ExcelColumn.component5, kanji, source)
-    ])
+    ]).drop_duplicates()
     if vr_cluster.empty:
         vr_all_cluster = pandas.concat([
             find_cluster_all_components(ExcelColumn.component1, kanji, source),
@@ -267,7 +267,7 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
             find_cluster_all_components(ExcelColumn.component3, kanji, source),
             find_cluster_all_components(ExcelColumn.component4, kanji, source),
             find_cluster_all_components(ExcelColumn.component5, kanji, source)
-        ])
+        ]).drop_duplicates()
         if vr_all_cluster.empty:
             fifth_rule(kanji, categorization, source)
         else:
@@ -275,6 +275,7 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
             find_onyomi(kanji, vr_all_cluster, categorization, source)
     else:
         logger.info("vr clusters")
+        logger.info(len(vr_cluster))
         find_onyomi(kanji, vr_cluster, categorization, source)
 
 
