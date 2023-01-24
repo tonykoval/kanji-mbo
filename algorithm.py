@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 import pandas
 import logging
@@ -100,17 +100,24 @@ def append_categorization(category: str, kanji: Kanji, is_first: bool, categoriz
             categorization.result[category].append(kanji)
 
 
+def is_empty_string(value: str) -> Optional[str]:
+    if value != "":
+        return value
+    else:
+        return None
+
+
 def get_kanji_component(component: str, kanji: Kanji) -> Optional[str]:
     if component == ExcelColumn.component1:
-        return kanji.component1
+        return is_empty_string(kanji.component1)
     elif component == ExcelColumn.component2:
-        return kanji.component2
+        return is_empty_string(kanji.component2)
     elif component == ExcelColumn.component3:
-        return kanji.component3
+        return is_empty_string(kanji.component3)
     elif component == ExcelColumn.component4:
-        return kanji.component4
+        return is_empty_string(kanji.component4)
     elif component == ExcelColumn.component5:
-        return kanji.component5
+        return is_empty_string(kanji.component5)
     else:
         return None
 
@@ -213,11 +220,11 @@ def seventh_rule(kanji: Kanji, categorization: Categorization):
 
 def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     logger.info("6. rule")
-    vr_cluster_1_2 = pandas.concat([
+    vr_cluster_1_2 = concat_dataframe([
         find_cluster_1_2_components(ExcelColumn.component1, kanji, source),
         find_cluster_1_2_components(ExcelColumn.component2, kanji, source)
     ])
-    if vr_cluster_1_2.empty:
+    if vr_cluster_1_2 is None:
         seventh_rule(kanji, categorization)
     else:
         if len(vr_cluster_1_2.index) > 1:
@@ -252,30 +259,44 @@ def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source):
             logger.error("more stems")
 
 
+def concat_dataframe(list_dataframes: List[pandas.DataFrame]) -> Optional[pandas.DataFrame]:
+    test = True
+    for dataframe in list_dataframes:
+        if dataframe is None:
+            break
+        if not dataframe.empty:
+            test = False
+
+    if test:
+        return None
+    else:
+        return pandas.concat(list_dataframes).drop_duplicates()
+
+
 def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     logger.info("4. rule")
-    vr_cluster = pandas.concat([
+
+    vr_cluster = concat_dataframe([
         find_cluster_components(ExcelColumn.component2, kanji, source),
         find_cluster_components(ExcelColumn.component3, kanji, source),
         find_cluster_components(ExcelColumn.component4, kanji, source),
         find_cluster_components(ExcelColumn.component5, kanji, source)
-    ]).drop_duplicates()
-    if vr_cluster.empty:
-        vr_all_cluster = pandas.concat([
+    ])
+    if vr_cluster is None:
+        vr_all_cluster = concat_dataframe([
             find_cluster_all_components(ExcelColumn.component1, kanji, source),
             find_cluster_all_components(ExcelColumn.component2, kanji, source),
             find_cluster_all_components(ExcelColumn.component3, kanji, source),
             find_cluster_all_components(ExcelColumn.component4, kanji, source),
             find_cluster_all_components(ExcelColumn.component5, kanji, source)
-        ]).drop_duplicates()
-        if vr_all_cluster.empty:
+        ])
+        if vr_all_cluster is None:
             fifth_rule(kanji, categorization, source)
         else:
             logger.info("vr all cluster")
             find_onyomi(kanji, vr_all_cluster, categorization, source)
     else:
-        logger.info("vr clusters")
-        logger.info(len(vr_cluster))
+        logger.info("vr clusters: {} components".format(len(vr_cluster)))
         find_onyomi(kanji, vr_cluster, categorization, source)
 
 
