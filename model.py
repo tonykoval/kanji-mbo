@@ -5,6 +5,12 @@ from typing import List
 
 
 @dataclass
+class Stem:
+    group: str
+    priority: int
+
+
+@dataclass
 class Kanji:
     char: str
     component1: str
@@ -46,6 +52,7 @@ class Constants:
     vr = "VR"
     form = "FORM"
     visual = "VISUAL"
+    priority = "PRIORITY"
 
 
 class ExcelColumn:
@@ -64,6 +71,12 @@ class ExcelColumn:
     tags = "TAGS"
     group = "GROUP"
     stem_kanji = "STEM KANJI"
+    stem_component1 = "STEM 1"
+    stem_component2 = "STEM 2"
+    stem_component3 = "STEM 3"
+    stem_component4 = "STEM 4"
+    stem_component5 = "STEM 5"
+    stem_component6 = "STEM 6"
     on_reading_delimiter = "、"
     list_columns = ["CHAR", "COMPONENTS1", "COMPONENTS2", "COMPONENTS3", "COMPONENTS4", "COMPONENTS5", "ON READING",
                      "KUN READING", "KEYWORD", "SRL", "TYPE", "FREQ", "TAGS"]
