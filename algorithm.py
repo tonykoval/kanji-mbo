@@ -108,52 +108,14 @@ def is_empty_string(value: str) -> Optional[str]:
         return None
 
 
-def get_kanji_component(component: str, kanji: Kanji) -> Optional[str]:
-    if component == ExcelColumn.component1:
-        return is_empty_string(kanji.component1)
-    elif component == ExcelColumn.component2:
-        return is_empty_string(kanji.component2)
-    elif component == ExcelColumn.component3:
-        return is_empty_string(kanji.component3)
-    elif component == ExcelColumn.component4:
-        return is_empty_string(kanji.component4)
-    elif component == ExcelColumn.component5:
-        return is_empty_string(kanji.component5)
-    else:
-        return None
-
-
-def find_cluster_1_2_components(component: str, kanji: Kanji, source: Source) -> pandas.DataFrame:
-    kanji_component = get_kanji_component(component, kanji)
-    if kanji_component is not None:
-        return source.df_kanji[
-            ((source.df_kanji[ExcelColumn.component1] == kanji_component) |
-             (source.df_kanji[ExcelColumn.component2] == kanji_component))
-            & (source.df_kanji[ExcelColumn.char] != kanji.char)
-            ]
-
-
-def find_cluster_components(component: str, kanji: Kanji, source: Source) -> pandas.DataFrame:
-    kanji_component = get_kanji_component(component, kanji)
-    if kanji_component is not None:
-        return source.df_kanji[
-            (source.df_kanji[ExcelColumn.char] == kanji_component)
-            & (source.df_kanji[ExcelColumn.component2] == kanji_component)
-            & (source.df_kanji[ExcelColumn.char] != kanji.char)
-            ]
-
-
-def find_cluster_all_components(component: str, kanji: Kanji, source: Source) -> pandas.DataFrame:
-    kanji_component = get_kanji_component(component, kanji)
-    if kanji_component is not None:
-        return source.df_kanji[
-            ((source.df_kanji[ExcelColumn.component1] == kanji_component) |
-             (source.df_kanji[ExcelColumn.component2] == kanji_component) |
-             (source.df_kanji[ExcelColumn.component3] == kanji_component) |
-             (source.df_kanji[ExcelColumn.component4] == kanji_component) |
-             (source.df_kanji[ExcelColumn.component5] == kanji_component))
-            & (source.df_kanji[ExcelColumn.char] != kanji.char)
-            ]
+def find_cluster_1_2_3_components(component: str, kanji: Kanji, source: Source) -> pandas.DataFrame:
+    return source.df_kanji[
+        ((source.df_kanji[ExcelColumn.component1] == component) |
+         (source.df_kanji[ExcelColumn.component2] == component) |
+         (source.df_kanji[ExcelColumn.component3] == component)
+         )
+        & (source.df_kanji[ExcelColumn.char] != kanji.char)
+    ]
 
 
 def find_max_srv(dataframe: pandas.DataFrame):
@@ -172,7 +134,6 @@ def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Cate
             max_srl_kanji = find_max_srv(onyomi)
             logger.info("max srl kanji: {}".format(max_srl_kanji[ExcelColumn.char]))
             kanji.type = Constants.vr
-
             if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
                 categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
             else:
@@ -183,36 +144,60 @@ def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Cate
             kanji.type = Constants.vr
             max_srl_kanji = onyomi.iloc[0]
             if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-                categorization.queue[onyomi.iloc[0][ExcelColumn.char]].append(kanji)
+                categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
             else:
-                categorization.queue[onyomi.iloc[0][ExcelColumn.char]] = []
-                categorization.queue[onyomi.iloc[0][ExcelColumn.char]].append(kanji)
+                categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
+                categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
 
 
 def seventh_rule(kanji: Kanji, categorization: Categorization):
-    logger.warning("TODO 7. rule")
+    logger.info("7. rule")
     append_categorization(Constants.other_grp, kanji, False, categorization)
 
 
-def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
-    logger.info("6. rule")
-    vr_cluster_1_2 = concat_dataframe([
-        find_cluster_1_2_components(ExcelColumn.component1, kanji, source),
-        find_cluster_1_2_components(ExcelColumn.component2, kanji, source)
-    ])
-    if vr_cluster_1_2 is None:
-        seventh_rule(kanji, categorization)
-    else:
-        if len(vr_cluster_1_2.index) > 1:
-            append_categorization(Constants.visual_grp, kanji, False, categorization)
+def categorize_srl(dataframe: pandas.DataFrame, kanji: Kanji, categorization: Categorization, source: Source, type: str):
+    if len(dataframe.index) > 1:
+        max_srl_kanji = find_max_srv(dataframe)
+        kanji.type = type
+
+        if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
         else:
-            kanji.type = Constants.visual
-            max_srl_kanji = vr_cluster_1_2.iloc[0]
-            if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-                categorization.queue[vr_cluster_1_2.iloc[0][ExcelColumn.char]].append(kanji)
+            categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+    else:
+        kanji.type = type
+        max_srl_kanji = dataframe.iloc[0]
+        if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+        else:
+            categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+
+
+def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
+    logger.info("6. rule - first condition")
+    vr_cluster_1_2_3 = find_cluster_1_2_3_components(kanji.char, kanji, source)
+    if vr_cluster_1_2_3 is None or vr_cluster_1_2_3.empty:
+        logger.info("6. rule - second condition")
+        vr_component2 = source.df_kanji[
+            (source.df_kanji[ExcelColumn.component2] == kanji.component2)
+            & (source.df_kanji[ExcelColumn.char] != kanji.char)
+        ]
+        if vr_component2 is None or vr_component2.empty:
+            logger.info("6. rule - third condition")
+            vr_component3 = source.df_kanji[
+                (source.df_kanji[ExcelColumn.char] == kanji.component1)
+                & (source.df_kanji[ExcelColumn.char] != kanji.char)
+            ]
+            if vr_component3 is None or vr_component3.empty:
+                seventh_rule(kanji, categorization)
             else:
-                categorization.queue[vr_cluster_1_2.iloc[0][ExcelColumn.char]] = []
-                categorization.queue[vr_cluster_1_2.iloc[0][ExcelColumn.char]].append(kanji)
+                categorize_srl(vr_component3, kanji, categorization, source, Constants.visual)
+        else:
+            categorize_srl(vr_component2, kanji, categorization, source, Constants.visual)
+    else:
+        categorize_srl(vr_cluster_1_2_3, kanji, categorization, source, Constants.visual)
 
 
 def find_stem_cluster_all_components(opt_component: str, source: Source, priority: int) -> Optional[Stem]:
@@ -270,28 +255,16 @@ def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source):
         append_categorization(max_stem.group, kanji, False, categorization)
 
 
-def concat_dataframe(list_dataframes: List[pandas.DataFrame]) -> Optional[pandas.DataFrame]:
-    test = True
-    for dataframe in list_dataframes:
-        if dataframe is None:
-            break
-        if not dataframe.empty:
-            test = False
-
-    if test:
-        return None
-    else:
-        return pandas.concat(list_dataframes).drop_duplicates()
-
-
 def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     logger.info("4. rule")
 
-    # TODO rewrite rule
-    vr_cluster = concat_dataframe([
-        find_cluster_components(ExcelColumn.component2, kanji, source)
-    ])
+    vr_cluster = source.df_kanji[
+        (source.df_kanji[ExcelColumn.char] == kanji.component2)
+        | (source.df_kanji[ExcelColumn.component2] == kanji.component2)
+        & (source.df_kanji[ExcelColumn.char] != kanji.char)
+    ]
     if vr_cluster is None:
+        logger.info("empty vr_cluster")
         fifth_rule(kanji, categorization, source)
     else:
         logger.info("vr clusters: {} components".format(len(vr_cluster)))
