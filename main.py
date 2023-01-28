@@ -8,7 +8,7 @@ source = algorithm.read_excel("1500 KANJI COMPONENTS - ver. 1.3.xlsx")
 
 categorization = algorithm.init_categorization(source)
 
-# algorithm.categorize_kanji(algorithm.read_kanji_char("社", source), categorization, source)
+# algorithm.categorize_kanji(algorithm.read_kanji_char("夏", source), categorization, source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("眺", source), categorization, source)
 
 for i in range(len(source.df_kanji)):
@@ -16,7 +16,7 @@ for i in range(len(source.df_kanji)):
     # print(row.char)
     algorithm.categorize_kanji(row, categorization, source)
     # print("-----------------")
-#
+
 algorithm.categorize_queue(categorization)
 
 print("categorization")
