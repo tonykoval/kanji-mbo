@@ -22,7 +22,7 @@ def read_kanji(row: pandas.DataFrame) -> Kanji:
         component3=row[ExcelColumn.component3],
         component4=row[ExcelColumn.component4],
         component5=row[ExcelColumn.component5],
-        on_reading=row[ExcelColumn.on_reading],
+        on_reading=row[ExcelColumn.on_reading].split(ExcelColumn.on_reading_delimiter),
         kun_reading=row[ExcelColumn.kun_reading],
         keyword=row[ExcelColumn.keyword],
         srl=int(row[ExcelColumn.srl]),
@@ -30,6 +30,14 @@ def read_kanji(row: pandas.DataFrame) -> Kanji:
         freq=int(row[ExcelColumn.freq]),
         tags=list(row[ExcelColumn.tags])
     )
+
+
+def read_kanji_dataframe(dataframe: pandas.DataFrame) -> List[Kanji]:
+    res = []
+    for i in range(0, len(dataframe.index)):
+        row = dataframe.iloc[i]
+        res.append(read_kanji(row))
+    return res
 
 
 def read_kanji_char(char: str, source: Source) -> Kanji:
@@ -122,32 +130,68 @@ def find_max_srv(dataframe: pandas.DataFrame):
     return dataframe[dataframe[ExcelColumn.srl] == dataframe[ExcelColumn.srl].max()].iloc[0]
 
 
+def find_max_srv_kanji(vr_cluster: List[Kanji]) -> Kanji:
+    max_srl = -1
+    res_kanji = None
+
+    for kanji in vr_cluster:
+        if kanji.srl > max_srl:
+            max_srl = kanji.srl
+            res_kanji = kanji
+
+    return res_kanji
+
+
+def find_kanji_on_reading(vr_cluster_kanji: List[Kanji], kanji: Kanji) -> List[Kanji]:
+    res = []
+    for vr_kanji in vr_cluster_kanji:
+        test = False
+        for on_read in kanji.on_reading:
+            if on_read in vr_kanji.on_reading:
+                test = True
+        if test:
+            res.append(vr_kanji)
+
+    return res
+
+
 def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Categorization,
                 source: Source):
-    vr_crowns = kanji.on_reading.split(ExcelColumn.on_reading_delimiter)
-    onyomi = vr_cluster[vr_cluster[ExcelColumn.on_reading].isin(vr_crowns)]
-    if onyomi.empty:
-        fifth_rule(kanji, categorization, source)
+    vr_cluster_kanji = read_kanji_dataframe(vr_cluster)
+    onyomi = find_kanji_on_reading(vr_cluster_kanji, kanji)
+    if len(onyomi) == 0:
+        fifth_rule(kanji, categorization, source, False)
     else:
-        if len(onyomi.index) > 1:
+        if len(onyomi) > 1:
             logger.info("kanji > 1")
-            max_srl_kanji = find_max_srv(onyomi)
-            logger.info("max srl kanji: {}".format(max_srl_kanji[ExcelColumn.char]))
-            kanji.type = Constants.vr
-            if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-                categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+            max_srl_kanji = find_max_srv_kanji(onyomi)
+            if kanji.srl > max_srl_kanji.srl:
+                fifth_rule(kanji, categorization, source, True)
             else:
-                categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
-                categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+                logger.info("max srl kanji: {}".format(max_srl_kanji.char))
+                kanji.type = Constants.vr
+                if max_srl_kanji.char in categorization.queue.keys():
+                    categorization.queue[max_srl_kanji.char].append(kanji)
+                else:
+                    categorization.queue[max_srl_kanji.char] = []
+                    categorization.queue[max_srl_kanji.char].append(kanji)
         else:
             logger.info("kanji = 1")
+            logger.info("kanji srl: {}".format(kanji.srl))
             kanji.type = Constants.vr
-            max_srl_kanji = onyomi.iloc[0]
-            if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-                categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+            max_srl_kanji = onyomi[0]
+            logger.info("max_srl_kanji srl: {}".format(max_srl_kanji.srl))
+            if kanji.srl > max_srl_kanji.srl:
+                if kanji.srl > 2:
+                    fifth_rule(kanji, categorization, source, True)
+                else:
+                    fifth_rule(kanji, categorization, source, False)
             else:
-                categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
-                categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+                if max_srl_kanji.char in categorization.queue.keys():
+                    categorization.queue[max_srl_kanji.char].append(kanji)
+                else:
+                    categorization.queue[max_srl_kanji.char] = []
+                    categorization.queue[max_srl_kanji.char].append(kanji)
 
 
 def seventh_rule(kanji: Kanji, categorization: Categorization):
@@ -225,16 +269,14 @@ def find_max_stem(stems: List[Stem]) -> Optional[Stem]:
     priority = -1
     max_stem = None
     for stem in stems:
-        if stem is None:
-            break
-        elif stem.priority > priority:
+        if stem is not None and stem.priority > priority:
             max_stem = stem
             priority = stem.priority
 
     return max_stem
 
 
-def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source):
+def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source, ignore_srl: bool):
     logger.info("5. rule")
 
     max_stem = find_max_stem(
@@ -248,10 +290,13 @@ def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     if max_stem is None:
         sixth_rule(kanji, categorization, source)
     else:
-        if kanji.srl == 1:
-            kanji.type = Constants.form
-        else:
+        if ignore_srl:
             kanji.type = Constants.mean
+        else:
+            if kanji.srl == 1:
+                kanji.type = Constants.form
+            else:
+                kanji.type = Constants.mean
         append_categorization(max_stem.group, kanji, False, categorization)
 
 
@@ -265,7 +310,7 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     ]
     if vr_cluster is None:
         logger.info("empty vr_cluster")
-        fifth_rule(kanji, categorization, source)
+        fifth_rule(kanji, categorization, source, False)
     else:
         logger.info("vr clusters: {} components".format(len(vr_cluster)))
         find_onyomi(kanji, vr_cluster, categorization, source)
@@ -313,31 +358,31 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
             fourth_rule(kanji, categorization, source)
         else:
             logger.info("3. rule")
-            vr_crowns = kanji.on_reading.split(ExcelColumn.on_reading_delimiter)
-            onyomi = components[components[ExcelColumn.on_reading].isin(vr_crowns)]
-            if onyomi.empty:
+            components_kanji = read_kanji_dataframe(components)
+            onyomi = find_kanji_on_reading(components_kanji, kanji)
+            if len(onyomi) == 0:
                 logger.info("onyomi empty")
                 fourth_rule(kanji, categorization, source)
             else:
                 logger.info("3. rule a) b)")
-                if len(onyomi.index) > 1:
+                if len(onyomi) > 1:
                     logger.info("kanji > 1")
-                    max_srl_kanji = onyomi[onyomi[ExcelColumn.srl] == onyomi[ExcelColumn.srl].max()].iloc[0]
+                    max_srl_kanji = find_max_srv_kanji(onyomi)
                     kanji.tags.append(Constants.crown_tag)
                     kanji.type = Constants.vr
 
-                    if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-                        categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+                    if max_srl_kanji.char in categorization.queue.keys():
+                        categorization.queue[max_srl_kanji.char].append(kanji)
                     else:
-                        categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
-                        categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+                        categorization.queue[max_srl_kanji.char] = []
+                        categorization.queue[max_srl_kanji.char].append(kanji)
                 else:
                     logger.info("kanji = 1")
                     kanji.tags.append(Constants.crown_tag)
                     kanji.type = Constants.vr
-                    max_srl_kanji = onyomi.iloc[0]
-                    if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-                        categorization.queue[onyomi.iloc[0][ExcelColumn.char]].append(kanji)
+                    max_srl_kanji = onyomi[0]
+                    if max_srl_kanji.char in categorization.queue.keys():
+                        categorization.queue[max_srl_kanji.char].append(kanji)
                     else:
-                        categorization.queue[onyomi.iloc[0][ExcelColumn.char]] = []
-                        categorization.queue[onyomi.iloc[0][ExcelColumn.char]].append(kanji)
+                        categorization.queue[max_srl_kanji.char] = []
+                        categorization.queue[max_srl_kanji.char].append(kanji)

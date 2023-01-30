@@ -18,7 +18,7 @@ class Kanji:
     component3: str
     component4: str
     component5: str
-    on_reading: str
+    on_reading: List[str]
     kun_reading: str
     keyword: str
     srl: int
