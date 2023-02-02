@@ -302,18 +302,21 @@ def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source, ign
 
 def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     logger.info("4. rule")
-
-    vr_cluster = source.df_kanji[
-        (source.df_kanji[ExcelColumn.char] == kanji.component2)
-        | (source.df_kanji[ExcelColumn.component2] == kanji.component2)
-        & (source.df_kanji[ExcelColumn.char] != kanji.char)
-    ]
-    if vr_cluster is None:
-        logger.info("empty vr_cluster")
-        fifth_rule(kanji, categorization, source, False)
+    kanji_comp2 = is_empty_string(kanji.component2)
+    if kanji_comp2 is not None:
+        vr_cluster = source.df_kanji[
+            (source.df_kanji[ExcelColumn.char] == kanji.component2)
+            | (source.df_kanji[ExcelColumn.component2] == kanji.component2)
+            & (source.df_kanji[ExcelColumn.char] != kanji.char)
+        ]
+        if vr_cluster is None:
+            logger.info("empty vr_cluster")
+            fifth_rule(kanji, categorization, source, False)
+        else:
+            logger.info("vr clusters: {} components".format(len(vr_cluster)))
+            find_onyomi(kanji, vr_cluster, categorization, source)
     else:
-        logger.info("vr clusters: {} components".format(len(vr_cluster)))
-        find_onyomi(kanji, vr_cluster, categorization, source)
+        fifth_rule(kanji, categorization, source, False)
 
 
 def categorize_queue(categorization: Categorization):
@@ -371,18 +374,24 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
                     kanji.tags.append(Constants.crown_tag)
                     kanji.type = Constants.vr
 
-                    if max_srl_kanji.char in categorization.queue.keys():
-                        categorization.queue[max_srl_kanji.char].append(kanji)
+                    if kanji.srl > max_srl_kanji.srl:
+                        fourth_rule(kanji, categorization, source)
                     else:
-                        categorization.queue[max_srl_kanji.char] = []
-                        categorization.queue[max_srl_kanji.char].append(kanji)
+                        if max_srl_kanji.char in categorization.queue.keys():
+                            categorization.queue[max_srl_kanji.char].append(kanji)
+                        else:
+                            categorization.queue[max_srl_kanji.char] = []
+                            categorization.queue[max_srl_kanji.char].append(kanji)
                 else:
                     logger.info("kanji = 1")
                     kanji.tags.append(Constants.crown_tag)
                     kanji.type = Constants.vr
                     max_srl_kanji = onyomi[0]
-                    if max_srl_kanji.char in categorization.queue.keys():
-                        categorization.queue[max_srl_kanji.char].append(kanji)
+                    if kanji.srl > max_srl_kanji.srl:
+                        fourth_rule(kanji, categorization, source)
                     else:
-                        categorization.queue[max_srl_kanji.char] = []
-                        categorization.queue[max_srl_kanji.char].append(kanji)
+                        if max_srl_kanji.char in categorization.queue.keys():
+                            categorization.queue[max_srl_kanji.char].append(kanji)
+                        else:
+                            categorization.queue[max_srl_kanji.char] = []
+                            categorization.queue[max_srl_kanji.char].append(kanji)
