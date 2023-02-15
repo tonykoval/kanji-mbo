@@ -32,6 +32,7 @@ class Source:
     df_kanji: pandas.DataFrame
     df_keyword: pandas.DataFrame
     df_stem: pandas.DataFrame
+    df_special: pandas.DataFrame
 
 
 @dataclass
@@ -41,8 +42,8 @@ class Categorization:
 
 
 class Constants:
-    special_grp = '78 special'
     other_grp = '77 other'
+    special_grp = 'special'
     visual_grp = 'visual'
     mean = "MEAN"
     special = "SPECIAL"
@@ -56,6 +57,8 @@ class Constants:
 
 
 class ExcelColumn:
+    kanji = "KANJI"
+    key = "KEY"
     char = "CHAR"
     component1 = "COMPONENTS1"
     component2 = "COMPONENTS2"

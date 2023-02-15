@@ -54,7 +54,10 @@ def read_excel(filename: str) -> Source:
 
     df_stem = pandas.read_excel(filename, sheet_name="stem.list")
     df_stem.fillna('', inplace=True)
-    return Source(df_kanji, df_keyword, df_stem)
+
+    df_special = pandas.read_excel(filename, sheet_name="special.list")
+    df_special.fillna('', inplace=True)
+    return Source(df_kanji, df_keyword, df_stem, df_special)
 
 
 def init_categorization(source: Source) -> Categorization:
@@ -68,9 +71,12 @@ def init_categorization(source: Source) -> Categorization:
 
     categorization[Constants.other_grp] = []
     categorization[Constants.special_grp] = []
-    categorization[Constants.visual_grp] = []
-
     queue = {}
+
+    for kanji, key in source.df_special[[ExcelColumn.kanji, ExcelColumn.key]].values:
+        queue[key] = []
+        queue[key].append(read_kanji_char(kanji, source))
+
     return Categorization(categorization, queue)
 
 
@@ -90,10 +96,18 @@ def find_stem(kanji: Kanji, source: Source) -> Optional[str]:
         return group.iloc[0]
 
 
+def find_special(kanji: Kanji, source: Source) -> Optional[str]:
+    group = source.df_special[source.df_special[ExcelColumn.kanji] == kanji.char]
+    if group.empty:
+        return None
+    else:
+        return Constants.special_grp
+
+
 def append_categorization(category: str, kanji: Kanji, is_first: bool, categorization: Categorization):
     if is_first:
         if kanji.char in categorization.queue.keys():
-            for ch in categorization.queue[kanji.char]:
+            for ch in pandas.Series(categorization.queue[kanji.char]).drop_duplicates().tolist():
                 categorization.result[category].insert(0, ch)
             categorization.result[category].insert(0, kanji)
             del categorization.queue[kanji.char]
@@ -102,7 +116,7 @@ def append_categorization(category: str, kanji: Kanji, is_first: bool, categoriz
     else:
         if kanji.char in categorization.queue.keys():
             categorization.result[category].append(kanji)
-            for ch in categorization.queue[kanji.char]:
+            for ch in pandas.Series(categorization.queue[kanji.char]).drop_duplicates().tolist():
                 categorization.result[category].append(ch)
             del categorization.queue[kanji.char]
         else:
@@ -149,7 +163,7 @@ def find_kanji_on_reading(vr_cluster_kanji: List[Kanji], kanji: Kanji) -> List[K
         for on_read in kanji.on_reading:
             if on_read in vr_kanji.on_reading:
                 test = True
-        if test:
+        if test and vr_kanji.on_reading != ['']:
             res.append(vr_kanji)
 
     return res
@@ -224,10 +238,14 @@ def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     vr_cluster_1_2_3 = find_cluster_1_2_3_components(kanji.char, kanji, source)
     if vr_cluster_1_2_3 is None or vr_cluster_1_2_3.empty:
         logger.info("6. rule - second condition")
-        vr_component2 = source.df_kanji[
-            (source.df_kanji[ExcelColumn.component2] == kanji.component2)
-            & (source.df_kanji[ExcelColumn.char] != kanji.char)
-        ]
+        component2 = is_empty_string(kanji.component2)
+        if component2 is not None:
+            vr_component2 = source.df_kanji[
+                (source.df_kanji[ExcelColumn.component2] == kanji.component2)
+                & (source.df_kanji[ExcelColumn.char] != kanji.char)
+            ]
+        else:
+            vr_component2 = None
         if vr_component2 is None or vr_component2.empty:
             logger.info("6. rule - third condition")
             vr_component3 = source.df_kanji[
@@ -320,6 +338,8 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
 
 
 def categorize_queue(categorization: Categorization):
+    del categorization.result[Constants.special_grp]
+
     ds = DisjointSet()
     for key in categorization.result:
         for kanji in categorization.result[key]:
@@ -337,13 +357,12 @@ def categorize_queue(categorization: Categorization):
 def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Source):
     first_rule = find_keyword(kanji, source)
     second_rule = find_stem(kanji, source)
+    special_rule = find_special(kanji, source)
 
     if first_rule is not None:
         logger.info("1. rule")
         if kanji.type == Constants.mean:
             append_categorization(first_rule, kanji, False, categorization)
-        elif kanji.type == Constants.special:
-            append_categorization(Constants.special_grp, kanji, False, categorization)
         elif kanji.type == Constants.other:
             append_categorization(Constants.other_grp, kanji, False, categorization)
         else:
@@ -354,6 +373,9 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
             append_categorization(second_rule, kanji, True, categorization)
         else:
             print("ERROR: missing rule")
+    elif special_rule is not None:
+        logger.info("special")
+        append_categorization(special_rule, kanji, False, categorization)
     else:
         components = source.df_kanji[source.df_kanji[ExcelColumn.component2] == kanji.char]
         logger.info("components count: " + str(len(components.index)))

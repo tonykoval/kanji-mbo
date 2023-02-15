@@ -9,17 +9,17 @@ source = algorithm.read_excel("1500 KANJI COMPONENTS - ver. 1.3.xlsx")
 categorization = algorithm.init_categorization(source)
 # {'磨', '麻', '摩'}
 
-algorithm.categorize_kanji(algorithm.read_kanji_char("究", source), categorization, source)
+# algorithm.categorize_kanji(algorithm.read_kanji_char("戻", source), categorization, source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("麻", source), categorization, source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("摩", source), categorization, source)
 #
-# for i in range(len(source.df_kanji)):
-#     row = algorithm.read_kanji(source.df_kanji.loc[i])
-#     # print(row.char)
-#     algorithm.categorize_kanji(row, categorization, source)
-#     # print("-----------------")
+for i in range(len(source.df_kanji)):
+    row = algorithm.read_kanji(source.df_kanji.loc[i])
+    # print(row.char)
+    algorithm.categorize_kanji(row, categorization, source)
+    # print("-----------------")
 
-# algorithm.categorize_queue(categorization)
+algorithm.categorize_queue(categorization)
 
 print("categorization")
 for key in categorization.result:
@@ -27,9 +27,9 @@ for key in categorization.result:
     for kanji in categorization.result[key]:
         print(kanji.char)
 
-print("queue_categorization")
-for key in categorization.queue:
-    print("key: ", key)
-    for kanji in categorization.queue[key]:
-        print(kanji.char)
-    print("----")
+# print("queue_categorization")
+# for key in categorization.queue:
+#     print("key: ", key)
+#     for kanji in categorization.queue[key]:
+#         print(kanji.char)
+#     print("----")
