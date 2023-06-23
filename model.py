@@ -82,4 +82,4 @@ class ExcelColumn:
     stem_component6 = "STEM 6"
     on_reading_delimiter = "、"
     list_columns = ["CHAR", "COMPONENTS1", "COMPONENTS2", "COMPONENTS3", "COMPONENTS4", "COMPONENTS5", "ON READING",
-                     "KUN READING", "KEYWORD", "SRL", "TYPE", "FREQ", "TAGS"]
+                     "KUN READING", "KEYWORD", "SRL", "TYPE", "FREQ", "TAGS", "GROUP"]

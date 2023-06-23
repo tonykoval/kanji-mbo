@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional, List
 
 import pandas
 import logging
@@ -140,11 +140,11 @@ def find_cluster_1_2_3_components(component: str, kanji: Kanji, source: Source) 
     ]
 
 
-def find_max_srv(dataframe: pandas.DataFrame):
+def find_max_srl(dataframe: pandas.DataFrame):
     return dataframe[dataframe[ExcelColumn.srl] == dataframe[ExcelColumn.srl].max()].iloc[0]
 
 
-def find_max_srv_kanji(vr_cluster: List[Kanji]) -> Kanji:
+def find_max_srl_kanji(vr_cluster: List[Kanji]) -> Kanji:
     max_srl = -1
     res_kanji = None
 
@@ -178,7 +178,7 @@ def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Cate
     else:
         if len(onyomi) > 1:
             logger.info("kanji > 1")
-            max_srl_kanji = find_max_srv_kanji(onyomi)
+            max_srl_kanji = find_max_srl_kanji(onyomi)
             if kanji.srl > max_srl_kanji.srl:
                 fifth_rule(kanji, categorization, source, True)
             else:
@@ -215,7 +215,7 @@ def seventh_rule(kanji: Kanji, categorization: Categorization):
 
 def categorize_srl(dataframe: pandas.DataFrame, kanji: Kanji, categorization: Categorization, source: Source, type: str):
     if len(dataframe.index) > 1:
-        max_srl_kanji = find_max_srv(dataframe)
+        max_srl_kanji = find_max_srl(dataframe)
         kanji.type = type
 
         if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
@@ -235,6 +235,7 @@ def categorize_srl(dataframe: pandas.DataFrame, kanji: Kanji, categorization: Ca
 
 def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     logger.info("6. rule - first condition")
+    # rewrite rule
     vr_cluster_1_2_3 = find_cluster_1_2_3_components(kanji.char, kanji, source)
     if vr_cluster_1_2_3 is None or vr_cluster_1_2_3.empty:
         logger.info("6. rule - second condition")
@@ -262,7 +263,7 @@ def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
         categorize_srl(vr_cluster_1_2_3, kanji, categorization, source, Constants.visual)
 
 
-def find_stem_cluster_all_components(opt_component: str, source: Source, priority: int) -> Optional[Stem]:
+def find_stem_variations(opt_component: str, source: Source, priority: int) -> Optional[Stem]:
     component = is_empty_string(opt_component)
     if component:
         group = source.df_stem[
@@ -299,9 +300,9 @@ def fifth_rule(kanji: Kanji, categorization: Categorization, source: Source, ign
 
     max_stem = find_max_stem(
         [
-            find_stem_cluster_all_components(kanji.component1, source, 3),
-            find_stem_cluster_all_components(kanji.component2, source, 2),
-            find_stem_cluster_all_components(kanji.component3, source, 1)
+            find_stem_variations(kanji.component1, source, 3),
+            find_stem_variations(kanji.component2, source, 2),
+            find_stem_variations(kanji.component3, source, 1)
         ]
     )
 
@@ -392,7 +393,7 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
                 logger.info("3. rule a) b)")
                 if len(onyomi) > 1:
                     logger.info("kanji > 1")
-                    max_srl_kanji = find_max_srv_kanji(onyomi)
+                    max_srl_kanji = find_max_srl_kanji(onyomi)
                     kanji.tags.append(Constants.crown_tag)
                     kanji.type = Constants.vr
 
