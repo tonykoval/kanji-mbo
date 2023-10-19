@@ -16,6 +16,7 @@ def set_logging_level(state):
 
 def read_kanji(row: pandas.DataFrame) -> Kanji:
     return Kanji(
+        ref=row[ExcelColumn.char],
         char=row[ExcelColumn.char],
         component1=row[ExcelColumn.component1],
         component2=row[ExcelColumn.component2],
@@ -108,7 +109,9 @@ def append_categorization(category: str, kanji: Kanji, is_first: bool, categoriz
     if is_first:
         if kanji.char in categorization.queue.keys():
             for ch in pandas.Series(categorization.queue[kanji.char]).drop_duplicates().tolist():
-                categorization.result[category].insert(0, ch)
+                new_kanji = ch
+                new_kanji.ref = kanji.char
+                categorization.result[category].insert(0, new_kanji)
             categorization.result[category].insert(0, kanji)
             del categorization.queue[kanji.char]
         else:
@@ -117,7 +120,9 @@ def append_categorization(category: str, kanji: Kanji, is_first: bool, categoriz
         if kanji.char in categorization.queue.keys():
             categorization.result[category].append(kanji)
             for ch in pandas.Series(categorization.queue[kanji.char]).drop_duplicates().tolist():
-                categorization.result[category].append(ch)
+                new_kanji = ch
+                new_kanji.ref = kanji.char
+                categorization.result[category].insert(0, new_kanji)
             del categorization.queue[kanji.char]
         else:
             categorization.result[category].append(kanji)
@@ -185,10 +190,14 @@ def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Cate
                 logger.info("max srl kanji: {}".format(max_srl_kanji.char))
                 kanji.type = Constants.vr
                 if max_srl_kanji.char in categorization.queue.keys():
-                    categorization.queue[max_srl_kanji.char].append(kanji)
+                    new_kanji = kanji
+                    new_kanji.ref = max_srl_kanji.char
+                    categorization.queue[max_srl_kanji.char].append(new_kanji)
                 else:
                     categorization.queue[max_srl_kanji.char] = []
-                    categorization.queue[max_srl_kanji.char].append(kanji)
+                    new_kanji = kanji
+                    new_kanji.ref = max_srl_kanji.char
+                    categorization.queue[max_srl_kanji.char].append(new_kanji)
         else:
             logger.info("kanji = 1")
             logger.info("kanji srl: {}".format(kanji.srl))
@@ -202,10 +211,14 @@ def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Cate
                     fifth_rule(kanji, categorization, source, False)
             else:
                 if max_srl_kanji.char in categorization.queue.keys():
-                    categorization.queue[max_srl_kanji.char].append(kanji)
+                    new_kanji = kanji
+                    new_kanji.ref = max_srl_kanji.char
+                    categorization.queue[max_srl_kanji.char].append(new_kanji)
                 else:
                     categorization.queue[max_srl_kanji.char] = []
-                    categorization.queue[max_srl_kanji.char].append(kanji)
+                    new_kanji = kanji
+                    new_kanji.ref = max_srl_kanji.char
+                    categorization.queue[max_srl_kanji.char].append(new_kanji)
 
 
 def seventh_rule(kanji: Kanji, categorization: Categorization):
@@ -219,18 +232,26 @@ def categorize_srl(dataframe: pandas.DataFrame, kanji: Kanji, categorization: Ca
         kanji.type = type
 
         if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+            new_kanji = kanji
+            new_kanji.ref = max_srl_kanji[ExcelColumn.char]
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(new_kanji)
         else:
             categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
-            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+            new_kanji = kanji
+            new_kanji.ref = max_srl_kanji[ExcelColumn.char]
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(new_kanji)
     else:
         kanji.type = type
         max_srl_kanji = dataframe.iloc[0]
         if max_srl_kanji[ExcelColumn.char] in categorization.queue.keys():
-            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+            new_kanji = kanji
+            new_kanji.ref = max_srl_kanji[ExcelColumn.char]
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(new_kanji)
         else:
             categorization.queue[max_srl_kanji[ExcelColumn.char]] = []
-            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(kanji)
+            new_kanji = kanji
+            new_kanji.ref = max_srl_kanji[ExcelColumn.char]
+            categorization.queue[max_srl_kanji[ExcelColumn.char]].append(new_kanji)
 
 
 def sixth_rule(kanji: Kanji, categorization: Categorization, source: Source):
@@ -401,10 +422,14 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
                         fourth_rule(kanji, categorization, source)
                     else:
                         if max_srl_kanji.char in categorization.queue.keys():
-                            categorization.queue[max_srl_kanji.char].append(kanji)
+                            new_kanji = kanji
+                            new_kanji.ref = max_srl_kanji.char
+                            categorization.queue[max_srl_kanji.char].append(new_kanji)
                         else:
                             categorization.queue[max_srl_kanji.char] = []
-                            categorization.queue[max_srl_kanji.char].append(kanji)
+                            new_kanji = kanji
+                            new_kanji.ref = max_srl_kanji.char
+                            categorization.queue[max_srl_kanji.char].append(new_kanji)
                 else:
                     logger.info("kanji = 1")
                     kanji.tags.append(Constants.crown_tag)
@@ -414,7 +439,11 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
                         fourth_rule(kanji, categorization, source)
                     else:
                         if max_srl_kanji.char in categorization.queue.keys():
-                            categorization.queue[max_srl_kanji.char].append(kanji)
+                            new_kanji = kanji
+                            new_kanji.ref = max_srl_kanji.char
+                            categorization.queue[max_srl_kanji.char].append(new_kanji)
                         else:
                             categorization.queue[max_srl_kanji.char] = []
-                            categorization.queue[max_srl_kanji.char].append(kanji)
+                            new_kanji = kanji
+                            new_kanji.ref = max_srl_kanji.char
+                            categorization.queue[max_srl_kanji.char].append(new_kanji)

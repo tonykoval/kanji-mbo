@@ -12,6 +12,7 @@ class Stem:
 
 @dataclass
 class Kanji:
+    ref: str
     char: str
     component1: str
     component2: str
