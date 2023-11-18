@@ -26,6 +26,7 @@ class Kanji:
     type: str
     freq: int
     tags: List[str]
+    group: str
 
 
 @dataclass

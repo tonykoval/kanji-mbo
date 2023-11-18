@@ -23,12 +23,28 @@ for i in range(len(source.df_kanji)):
 
 algorithm.categorize_queue(categorization)
 
-print("categorization")
-for key in categorization.result:
-     print(key)
-     for kanji in sorted(categorization.result[key], key=lambda x: x.ref, reverse=True):
-        print(kanji.char, " (", kanji.ref, ")")
-#
+# print("categorization")
+# for key in categorization.result:
+#      print(key)
+#      for kanji in sorted(categorization.result[key], key=lambda x: x.ref, reverse=True):
+#         print(kanji.char, " (", kanji.ref, ")")
+
+print("subgroup categorization")
+for key in dict(sorted(categorization.result.items())):
+    print(key)
+    res = {}
+    for kanji in sorted(categorization.result[key], key=lambda x: x.ref, reverse=True):
+        if kanji.group == '':
+            kanji_group = "companion"
+        else:
+            kanji_group = kanji.group
+
+        if kanji_group in res.keys():
+            res[kanji_group].append(kanji.char)
+        else:
+            res[kanji_group] = [kanji.char]
+    print(dict(sorted(res.items())))
+
 # print("queue_categorization")
 # for key in categorization.queue:
 #      print("key: ", key)

@@ -29,7 +29,8 @@ def read_kanji(row: pandas.DataFrame) -> Kanji:
         srl=int(row[ExcelColumn.srl]),
         type=row[ExcelColumn.type],
         freq=int(row[ExcelColumn.freq]),
-        tags=list(row[ExcelColumn.tags])
+        tags=list(row[ExcelColumn.tags]),
+        group=row[ExcelColumn.group]
     )
 
 
