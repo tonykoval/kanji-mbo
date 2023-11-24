@@ -10,7 +10,7 @@ source = algorithm.read_excel("2250 KANJI COMPONENTS - ver. 1.0.xlsx")
 categorization = algorithm.init_categorization(source)
 # {'磨', '麻', '摩'}
 
-# algorithm.categorize_kanji(algorithm.read_kanji_char("酢", source), categorization, source)
+# algorithm.categorize_kanji(algorithm.read_kanji_char("昏", source), categorization, source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("麻", source), categorization, source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("摩", source), categorization, source)
 #
