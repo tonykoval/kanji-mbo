@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9816af09-4881-4bac-ac40-1fd9f3e0c11a" name="Changes" comment="fix problems">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/2250 KANJI COMPONENTS - ver. 1.0.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/2250 KANJI COMPONENTS - ver. 1.0.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/model.py" afterDir="false" />
-    </list>
+    <list default="true" id="9816af09-4881-4bac-ac40-1fd9f3e0c11a" name="Changes" comment="fix problems" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
