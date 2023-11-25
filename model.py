@@ -44,7 +44,7 @@ class Categorization:
 
 
 class Constants:
-    other_grp = '77 other'
+    other_grp = '79 other'
     special_grp = 'special'
     visual_grp = 'visual'
     mean = "MEAN"
