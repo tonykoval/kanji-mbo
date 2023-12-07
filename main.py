@@ -23,11 +23,11 @@ for i in range(len(source.df_kanji)):
 
 algorithm.categorize_queue(categorization)
 
-# print("categorization")
-# for key in categorization.result:
-#      print(key)
-#      for kanji in sorted(categorization.result[key], key=lambda x: x.ref, reverse=True):
-#         print(kanji.char, " (", kanji.ref, ")")
+print("categorization")
+for key in categorization.result:
+     print(key)
+     for kanji in sorted(categorization.result[key], key=lambda x: x.ref, reverse=True):
+        print(kanji.char, " (", kanji.ref, ")")
 
 print("subgroup categorization")
 for key in dict(sorted(categorization.result.items())):
