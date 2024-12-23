@@ -113,8 +113,15 @@ def find_kanji_on_reading(vr_cluster_kanji: List[Kanji], kanji: Kanji) -> List[K
 
 
 def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji]):
-    components: List[Kanji] = list(filter(lambda k: k.component2 == kanji.component2 or k.char == kanji.component2,
-                                          list_kanji))
+
+    components = []
+    for k in list_kanji:
+        if (kanji.component2 == k.component2 and kanji.component2 != '') or \
+                (kanji.char == k.component2 and k.component2 != ''):
+            components.append(k)
+
+    # components: List[Kanji] = list(filter(lambda k: k.component2 == kanji.component2 or k.char == kanji.component2,
+    #                                       list_kanji))
     str = ''
     for component in components:
         str += component.char + ', '
@@ -131,10 +138,10 @@ def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji])
         for k_onyomi in kanji.onyomi:
             for component in components:
                 for c_onyomi in component.onyomi:
-                    if k_onyomi == c_onyomi:
+                    if k_onyomi == c_onyomi and k_onyomi != '':
                         onyomi_list.append(component)
 
-        seen_onyomi= set()
+        seen_onyomi = set()
         new_onyomi_list = []
         for obj in onyomi_list:
             if obj.char not in seen_onyomi:
