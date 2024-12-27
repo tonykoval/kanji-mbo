@@ -114,8 +114,11 @@ def find_kanji_on_reading(vr_cluster_kanji: List[Kanji], kanji: Kanji) -> List[K
 
 def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji]):
 
+    # print(f'kanji component2: {kanji.component2}')
+    # print(kanji.component2 != 0)
     components = []
     for k in list_kanji:
+        # todo fix != 0
         if (kanji.component2 == k.component2 and kanji.component2 != '') or \
                 (kanji.char == k.component2 and k.component2 != ''):
             components.append(k)
@@ -156,14 +159,18 @@ def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji])
         #                                       components))
         print(f"onyomi filter count: {len(new_onyomi_list)}")
         print(f"onyomi filter: {str_onyomi}")
-        new_kanji = kanji
-        res = ''
-        minimum = 99999
-        for onyomi in new_onyomi_list:
-            if onyomi.freq < minimum:
-                res = onyomi.char
-                minimum = onyomi.freq
+        if len(new_onyomi_list) != 0:
+            new_kanji = kanji
+            res = ''
+            minimum = 99999
+            for onyomi in new_onyomi_list:
+                if onyomi.freq < minimum:
+                    res = onyomi.char
+                    minimum = onyomi.freq
 
-        new_kanji.ref = res
-        print(f"RESULT: {new_kanji.char}")
-        result.append(new_kanji)
+            new_kanji.ref = res
+            print(f"RESULT: {new_kanji.char}")
+            result.append(new_kanji)
+        else:
+            print(f"RESULT: {kanji.char}")
+            result.append(kanji)
