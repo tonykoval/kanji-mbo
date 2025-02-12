@@ -120,7 +120,8 @@ def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji])
     for k in list_kanji:
         # todo fix != 0
         if (kanji.component2 == k.component2 and kanji.component2 != '') or \
-                (kanji.char == k.component2 and k.component2 != ''):
+           (kanji.char == k.component2 and kanji.char != '') or \
+           (kanji.component2 == k.char and kanji.component2 != ''):
             components.append(k)
 
     # components: List[Kanji] = list(filter(lambda k: k.component2 == kanji.component2 or k.char == kanji.component2,
