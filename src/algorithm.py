@@ -1,7 +1,7 @@
+import logging
 from typing import Optional, List
 
 import pandas
-import logging
 from disjoint_set import DisjointSet
 
 from model import Source, Categorization, Constants, Kanji, ExcelColumn, Stem
