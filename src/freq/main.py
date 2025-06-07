@@ -3,7 +3,7 @@ from operator import attrgetter
 
 from disjoint_set import DisjointSet
 
-import freq.algorithm as algorithm
+import src.freq.algorithm as algorithm
 
 import sys
 

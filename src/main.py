@@ -5,7 +5,7 @@ import algorithm
 algorithm.set_logging_level(logging.INFO)
 # algorithm.set_logging_level(logging.WARNING)
 # source = algorithm.read_excel("1500 KANJI COMPONENTS - ver. 1.3.xlsx")
-source = algorithm.read_excel("2250 KANJI COMPONENTS - ver. 1.0.xlsx")
+source = algorithm.read_excel("../excel/2250 KANJI COMPONENTS - ver. 1.0.xlsx")
 
 categorization = algorithm.init_categorization(source)
 # {'磨', '麻', '摩'}
