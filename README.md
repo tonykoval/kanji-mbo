@@ -53,4 +53,21 @@ This editorial decision is discussed in the article:
 
 ## How to Run the Algorithm
 
-*(To be added)*
+### Install dependencies
+```
+pip install -r requirements.txt
+```
+
+### Run program
+```
+python main.py
+```
+
+### Configuration
+```python
+# select source excel file
+source = algorithm.read_excel("../excel/1500 KANJI COMPONENTS - ver. 1.3.xlsx")
+
+# categorize kanji character
+algorithm.categorize_kanji(algorithm.read_kanji_char("麻", source), categorization, source)
+```
