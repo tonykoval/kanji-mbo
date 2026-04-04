@@ -1,17 +1,15 @@
-import logging
 from typing import Optional, List
 
 import pandas
 from disjoint_set import DisjointSet
 
 from model import Source, Categorization, Constants, Kanji, ExcelColumn, Stem
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M:%S')
-
-
-def set_logging_level(state):
-    logger.setLevel(state)
+from core import (
+    is_empty_string, set_logging_level, logger,
+    read_kanji_dataframe as _read_kanji_dataframe,
+    find_kanji_on_reading as _find_kanji_on_reading,
+    find_cluster_1_2_3_components as _find_cluster_1_2_3_components,
+)
 
 
 def read_kanji(row: pandas.DataFrame) -> Kanji:
@@ -35,11 +33,7 @@ def read_kanji(row: pandas.DataFrame) -> Kanji:
 
 
 def read_kanji_dataframe(dataframe: pandas.DataFrame) -> List[Kanji]:
-    res = []
-    for i in range(0, len(dataframe.index)):
-        row = dataframe.iloc[i]
-        res.append(read_kanji(row))
-    return res
+    return _read_kanji_dataframe(dataframe, read_kanji)
 
 
 def read_kanji_char(char: str, source: Source) -> Kanji:
@@ -134,21 +128,12 @@ def add_to_queue(kanji: Kanji, ref_char: str, categorization: Categorization):
     categorization.queue.setdefault(ref_char, []).append(kanji)
 
 
-def is_empty_string(value: str) -> Optional[str]:
-    if value != "":
-        return value
-    else:
-        return None
-
-
 def find_cluster_1_2_3_components(component: str, kanji: Kanji, source: Source) -> pandas.DataFrame:
-    return source.df_kanji[
-        ((source.df_kanji[ExcelColumn.component1] == component) |
-         (source.df_kanji[ExcelColumn.component2] == component) |
-         (source.df_kanji[ExcelColumn.component3] == component)
-         )
-        & (source.df_kanji[ExcelColumn.char] != kanji.char)
-    ]
+    return _find_cluster_1_2_3_components(
+        component, kanji.char, source.df_kanji,
+        ExcelColumn.char, ExcelColumn.component1,
+        ExcelColumn.component2, ExcelColumn.component3
+    )
 
 
 def find_max_srl(dataframe: pandas.DataFrame):
@@ -168,16 +153,7 @@ def find_max_srl_kanji(vr_cluster: List[Kanji]) -> Kanji:
 
 
 def find_kanji_on_reading(vr_cluster_kanji: List[Kanji], kanji: Kanji) -> List[Kanji]:
-    res = []
-    for vr_kanji in vr_cluster_kanji:
-        test = False
-        for on_read in kanji.on_reading:
-            if on_read in vr_kanji.on_reading:
-                test = True
-        if test and vr_kanji.on_reading != ['']:
-            res.append(vr_kanji)
-
-    return res
+    return _find_kanji_on_reading(vr_cluster_kanji, kanji, lambda k: k.on_reading)
 
 
 def find_onyomi(kanji: Kanji, vr_cluster: pandas.DataFrame, categorization: Categorization,
@@ -313,8 +289,8 @@ def fourth_rule(kanji: Kanji, categorization: Categorization, source: Source):
     kanji_comp2 = is_empty_string(kanji.component2)
     if kanji_comp2 is not None:
         vr_cluster = source.df_kanji[
-            (source.df_kanji[ExcelColumn.char] == kanji.component2)
-            | (source.df_kanji[ExcelColumn.component2] == kanji.component2)
+            ((source.df_kanji[ExcelColumn.char] == kanji.component2)
+             | (source.df_kanji[ExcelColumn.component2] == kanji.component2))
             & (source.df_kanji[ExcelColumn.char] != kanji.char)
         ]
         if vr_cluster is None:

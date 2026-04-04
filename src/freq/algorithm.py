@@ -1,16 +1,21 @@
-import logging
-from typing import Optional, List
+import sys
+import os
+from dataclasses import replace
+from typing import List
 
 import pandas
 
+# Allow importing from parent src/ directory
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from model import Source, Kanji, ExcelColumn
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(asctime)s %(levelname)-4s %(message)s', datefmt='%m/%d %H:%M:%S')
-
-
-def set_logging_level(state):
-    logger.setLevel(state)
+from core import (
+    is_empty_string, set_logging_level,
+    read_kanji_dataframe as _read_kanji_dataframe,
+    find_kanji_on_reading as _find_kanji_on_reading,
+    find_cluster_1_2_3_components as _find_cluster_1_2_3_components,
+)
+from core import logger
 
 
 def read_kanji(row: pandas.DataFrame) -> Kanji:
@@ -28,11 +33,7 @@ def read_kanji(row: pandas.DataFrame) -> Kanji:
 
 
 def read_kanji_dataframe(dataframe: pandas.DataFrame) -> List[Kanji]:
-    res = []
-    for i in range(0, len(dataframe.index)):
-        row = dataframe.iloc[i]
-        res.append(read_kanji(row))
-    return res
+    return _read_kanji_dataframe(dataframe, read_kanji)
 
 
 def read_kanji_char(kanji: str, source: Source) -> Kanji:
@@ -48,21 +49,12 @@ def read_excel(filename: str) -> pandas.DataFrame:
     return df_kanji
 
 
-def is_empty_string(value: str) -> Optional[str]:
-    if value != "":
-        return value
-    else:
-        return None
-
-
 def find_cluster_1_2_3_components(component: str, kanji: Kanji, source: Source) -> pandas.DataFrame:
-    return source.df_kanji[
-        ((source.df_kanji[ExcelColumn.component1] == component) |
-         (source.df_kanji[ExcelColumn.component2] == component) |
-         (source.df_kanji[ExcelColumn.component3] == component)
-         )
-        & (source.df_kanji[ExcelColumn.kanji] != kanji.char)
-        ]
+    return _find_cluster_1_2_3_components(
+        component, kanji.char, source.df_kanji,
+        ExcelColumn.kanji, ExcelColumn.component1,
+        ExcelColumn.component2, ExcelColumn.component3
+    )
 
 
 def find_min_freq_kanji(dataframe: pandas.DataFrame, source: Source):
@@ -82,16 +74,7 @@ def find_max_srl_kanji(vr_cluster: List[Kanji]) -> Kanji:
 
 
 def find_kanji_on_reading(vr_cluster_kanji: List[Kanji], kanji: Kanji) -> List[Kanji]:
-    res = []
-    for vr_kanji in vr_cluster_kanji:
-        test = False
-        for on_read in kanji.onyomi:
-            if on_read in vr_kanji.onyomi:
-                test = True
-        if test and vr_kanji.onyomi != ['']:
-            res.append(vr_kanji)
-
-    return res
+    return _find_kanji_on_reading(vr_cluster_kanji, kanji, lambda k: k.onyomi)
 
 
 def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji]):
@@ -132,8 +115,7 @@ def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji])
         print(f"onyomi filter count: {len(new_onyomi_list)}")
         print(f"onyomi filter: {onyomi_str}")
         if len(new_onyomi_list) != 0:
-            new_kanji = kanji
-            new_kanji.ref = min(new_onyomi_list, key=lambda o: o.freq).char
+            new_kanji = replace(kanji, ref=min(new_onyomi_list, key=lambda o: o.freq).char)
             print(f"RESULT: {new_kanji.char}")
             result.append(new_kanji)
         else:

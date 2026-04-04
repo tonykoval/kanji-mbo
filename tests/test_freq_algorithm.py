@@ -145,6 +145,16 @@ class TestCategorizeKanji(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].ref, "時")
 
+    def test_onyomi_match_does_not_mutate_original(self):
+        k = make_kanji("持", comp2="寺", onyomi=["ジ"], freq=142)
+        k_ref = make_kanji("時", comp2="寺", onyomi=["ジ"], freq=26)
+        list_kanji = [k, k_ref]
+        result = []
+        algorithm.categorize_kanji(k, result, list_kanji)
+        # The result should have a new ref, but the original kanji in list_kanji must be unchanged
+        self.assertEqual(result[0].ref, "時")
+        self.assertEqual(k.ref, "持")  # original NOT mutated
+
     def test_no_onyomi_match_self_reference(self):
         k = make_kanji("出", comp2="山", onyomi=["シュツ"], freq=5)
         k2 = make_kanji("山", comp2="山", onyomi=["サン"], freq=400)
