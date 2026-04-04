@@ -61,7 +61,7 @@ def find_cluster_1_2_3_components(component: str, kanji: Kanji, source: Source) 
          (source.df_kanji[ExcelColumn.component2] == component) |
          (source.df_kanji[ExcelColumn.component3] == component)
          )
-        & (source.df_kanji[ExcelColumn.char] != kanji.char)
+        & (source.df_kanji[ExcelColumn.kanji] != kanji.char)
         ]
 
 
@@ -103,14 +103,12 @@ def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji])
                 (kanji.component2 == k.char and kanji.component2 != ''):
             components.append(k)
 
-    str = ''
-    for component in components:
-        str += component.char + ', '
+    components_str = ', '.join(c.char for c in components)
 
     print("-------------------------------------------")
     print(f"categorize: {kanji.char}")
     print(f"components count: {len(components)}")
-    print(f"components: {str}")
+    print(f"components: {components_str}")
     if len(components) == 0:
         print(f"RESULT: {kanji.char}")
         result.append(kanji)
@@ -129,22 +127,13 @@ def categorize_kanji(kanji: Kanji, result: List[Kanji], list_kanji: List[Kanji])
                 new_onyomi_list.append(obj)
                 seen_onyomi.add(obj.char)
 
-        str_onyomi = ''
-        for onyomi in new_onyomi_list:
-            str_onyomi += f"{onyomi.char}, {onyomi.freq} |"
+        onyomi_str = ' | '.join(f"{o.char}, {o.freq}" for o in new_onyomi_list)
 
         print(f"onyomi filter count: {len(new_onyomi_list)}")
-        print(f"onyomi filter: {str_onyomi}")
+        print(f"onyomi filter: {onyomi_str}")
         if len(new_onyomi_list) != 0:
             new_kanji = kanji
-            res = ''
-            minimum = 99999
-            for onyomi in new_onyomi_list:
-                if onyomi.freq < minimum:
-                    res = onyomi.char
-                    minimum = onyomi.freq
-
-            new_kanji.ref = res
+            new_kanji.ref = min(new_onyomi_list, key=lambda o: o.freq).char
             print(f"RESULT: {new_kanji.char}")
             result.append(new_kanji)
         else:
