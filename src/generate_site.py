@@ -46,48 +46,69 @@ def generate_html(groups, title, filename):
 <style>
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e0e0e0; }}
-.header {{ background: #161923; border-bottom: 1px solid #2a2d3a; padding: 16px 24px; position: sticky; top: 0; z-index: 100; }}
-.header h1 {{ font-size: 20px; color: #fff; }}
-.header .stats {{ font-size: 13px; color: #888; margin-top: 4px; }}
-.container {{ display: flex; height: calc(100vh - 70px); }}
+.header {{ background: #161923; border-bottom: 1px solid #2a2d3a; padding: 12px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
+.header a.back {{ color: #4a9eff; text-decoration: none; font-size: 14px; white-space: nowrap; }}
+.header h1 {{ font-size: 18px; color: #fff; flex: 1; min-width: 0; }}
+.header .stats {{ font-size: 12px; color: #888; width: 100%; }}
+.menu-btn {{ display: none; background: #1e2130; border: 1px solid #2a2d3a; color: #e0e0e0; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px; }}
+.container {{ display: flex; height: calc(100vh - 80px); }}
 .sidebar {{ width: 280px; min-width: 280px; background: #161923; border-right: 1px solid #2a2d3a; overflow-y: auto; padding: 8px 0; }}
-.sidebar input {{ width: calc(100% - 16px); margin: 8px; padding: 8px 12px; background: #1e2130; border: 1px solid #2a2d3a; border-radius: 6px; color: #e0e0e0; font-size: 14px; outline: none; }}
+.sidebar input {{ width: calc(100% - 16px); margin: 8px; padding: 10px 12px; background: #1e2130; border: 1px solid #2a2d3a; border-radius: 6px; color: #e0e0e0; font-size: 16px; outline: none; -webkit-appearance: none; }}
 .sidebar input:focus {{ border-color: #4a9eff; }}
-.sidebar .group-item {{ padding: 8px 16px; cursor: pointer; font-size: 14px; border-left: 3px solid transparent; }}
+.sidebar .group-item {{ padding: 10px 16px; cursor: pointer; font-size: 14px; border-left: 3px solid transparent; }}
 .sidebar .group-item:hover {{ background: #1e2130; }}
 .sidebar .group-item.active {{ background: #1a2332; border-left-color: #4a9eff; color: #4a9eff; }}
 .sidebar .group-item .count {{ float: right; color: #666; font-size: 12px; }}
-.main {{ flex: 1; overflow-y: auto; padding: 24px; }}
-.tabs {{ display: flex; gap: 4px; margin-bottom: 20px; }}
-.tab {{ padding: 8px 16px; cursor: pointer; border-radius: 6px 6px 0 0; background: #1e2130; color: #888; font-size: 14px; border: 1px solid #2a2d3a; border-bottom: none; }}
+.main {{ flex: 1; overflow-y: auto; padding: 16px; }}
+.tabs {{ display: flex; gap: 4px; margin-bottom: 16px; }}
+.tab {{ padding: 10px 16px; cursor: pointer; border-radius: 6px 6px 0 0; background: #1e2130; color: #888; font-size: 14px; border: 1px solid #2a2d3a; border-bottom: none; -webkit-tap-highlight-color: transparent; }}
 .tab.active {{ background: #0f1117; color: #4a9eff; }}
-.search-box {{ margin-bottom: 20px; }}
-.search-box input {{ width: 100%; max-width: 500px; padding: 10px 14px; background: #1e2130; border: 1px solid #2a2d3a; border-radius: 6px; color: #e0e0e0; font-size: 15px; outline: none; }}
+.search-box {{ margin-bottom: 16px; }}
+.search-box input {{ width: 100%; padding: 12px 14px; background: #1e2130; border: 1px solid #2a2d3a; border-radius: 6px; color: #e0e0e0; font-size: 16px; outline: none; -webkit-appearance: none; }}
 .search-box input:focus {{ border-color: #4a9eff; }}
-.group-title {{ font-size: 18px; color: #fff; margin-bottom: 16px; }}
+.group-title {{ font-size: 18px; color: #fff; margin-bottom: 12px; }}
 .group-title .count {{ color: #888; font-size: 14px; font-weight: normal; }}
-.kanji-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }}
-.kanji-card {{ background: #161923; border: 1px solid #2a2d3a; border-radius: 8px; padding: 16px; transition: border-color 0.2s; }}
+.kanji-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }}
+.kanji-card {{ background: #161923; border: 1px solid #2a2d3a; border-radius: 8px; padding: 14px; transition: border-color 0.2s; }}
 .kanji-card:hover {{ border-color: #4a9eff; }}
-.kanji-card .char {{ font-size: 42px; text-align: center; margin-bottom: 8px; color: #fff; }}
-.kanji-card .keyword {{ text-align: center; font-size: 15px; color: #4a9eff; margin-bottom: 12px; }}
+.kanji-card .char {{ font-size: 42px; text-align: center; margin-bottom: 6px; color: #fff; }}
+.kanji-card .keyword {{ text-align: center; font-size: 15px; color: #4a9eff; margin-bottom: 10px; }}
 .kanji-card .details {{ font-size: 13px; color: #aaa; line-height: 1.8; }}
 .kanji-card .details span.label {{ color: #666; }}
-.search-result {{ padding: 10px 14px; background: #161923; border: 1px solid #2a2d3a; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 16px; }}
-.search-result .sr-char {{ font-size: 28px; color: #fff; min-width: 40px; text-align: center; }}
-.search-result .sr-info {{ font-size: 14px; }}
+.search-result {{ padding: 12px 14px; background: #161923; border: 1px solid #2a2d3a; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; cursor: pointer; }}
+.search-result:active {{ border-color: #4a9eff; }}
+.search-result .sr-char {{ font-size: 32px; color: #fff; min-width: 44px; text-align: center; }}
+.search-result .sr-info {{ font-size: 14px; min-width: 0; }}
 .search-result .sr-info .sr-keyword {{ color: #4a9eff; }}
-.search-result .sr-info .sr-meta {{ color: #888; font-size: 12px; }}
+.search-result .sr-info .sr-detail {{ color: #aaa; font-size: 13px; }}
+.search-result .sr-info .sr-meta {{ color: #666; font-size: 12px; }}
 .empty {{ color: #666; padding: 40px; text-align: center; }}
+@media (max-width: 768px) {{
+  .menu-btn {{ display: inline-block; }}
+  .container {{ flex-direction: column; height: auto; min-height: calc(100vh - 80px); }}
+  .sidebar {{ display: none; width: 100%; min-width: 100%; border-right: none; border-bottom: 1px solid #2a2d3a; max-height: 50vh; }}
+  .sidebar.open {{ display: block; }}
+  .main {{ padding: 12px; }}
+  .kanji-grid {{ grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }}
+  .kanji-card {{ padding: 10px; }}
+  .kanji-card .char {{ font-size: 36px; }}
+  .kanji-card .details {{ font-size: 12px; line-height: 1.6; }}
+  .header .stats {{ display: none; }}
+}}
+@media (max-width: 400px) {{
+  .kanji-grid {{ grid-template-columns: 1fr 1fr; }}
+}}
 </style>
 </head>
 <body>
 <div class="header">
+  <a class="back" href="index.html">&larr; Index</a>
+  <button class="menu-btn" onclick="toggleSidebar()">Groups</button>
   <h1>\u6f22 {title_esc}</h1>
-  <div class="stats">{len(groups)} groups &middot; {total_kanji} kanji &middot; Generated from {escape(filename)}</div>
+  <div class="stats">{len(groups)} groups &middot; {total_kanji} kanji &middot; {escape(filename)}</div>
 </div>
 <div class="container">
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <input type="text" id="groupFilter" placeholder="Filter groups..." oninput="filterGroups()">
     <div id="groupList"></div>
   </div>
@@ -100,8 +121,8 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans
       <div id="groupContent"><div class="empty">Select a group from the sidebar</div></div>
     </div>
     <div id="searchTab" style="display:none">
-      <div class="search-box"><input type="text" id="searchInput" placeholder="Search by kanji, keyword, or on'yomi..." oninput="doSearch()"></div>
-      <div id="searchResults"><div class="empty">Type to search</div></div>
+      <div class="search-box"><input type="text" id="searchInput" placeholder="Kanji, keyword, on'yomi, kun'yomi, component..." oninput="doSearch()"></div>
+      <div id="searchResults"><div class="empty">Type to search (e.g. \u9752, blue, \u30bb\u30a4)</div></div>
     </div>
   </div>
 </div>
@@ -109,6 +130,14 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans
 const DATA = {groups_json};
 const groupNames = Object.keys(DATA);
 let activeGroup = null;
+
+// Build flat search index for speed
+const ALL = [];
+groupNames.forEach(g => DATA[g].forEach(k => ALL.push({{...k, groupName: g}})));
+
+function toggleSidebar() {{
+  document.getElementById('sidebar').classList.toggle('open');
+}}
 
 function renderSidebar(filter) {{
   const list = document.getElementById('groupList');
@@ -122,6 +151,8 @@ function renderSidebar(filter) {{
 function selectGroup(name) {{
   activeGroup = name;
   renderSidebar(document.getElementById('groupFilter').value);
+  document.getElementById('sidebar').classList.remove('open');
+  switchTab('groups');
   const kanji = DATA[name];
   if (!kanji || kanji.length === 0) {{
     document.getElementById('groupContent').innerHTML = '<div class="empty">Empty group</div>';
@@ -161,27 +192,30 @@ function switchTab(tab) {{
 }}
 
 function doSearch() {{
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const raw = document.getElementById('searchInput').value.trim();
   const el = document.getElementById('searchResults');
-  if (!q) {{ el.innerHTML = '<div class="empty">Type to search</div>'; return; }}
-  let results = [];
-  groupNames.forEach(g => {{
-    DATA[g].forEach(k => {{
-      if (k.char === q || k.keyword.toLowerCase().includes(q) || k.on_reading.includes(q)) {{
-        results.push({{ ...k, groupName: g }});
-      }}
-    }});
-  }});
-  if (results.length === 0) {{ el.innerHTML = '<div class="empty">No results</div>'; return; }}
-  el.innerHTML = results.slice(0, 200).map(k =>
-    `<div class="search-result">
+  if (!raw) {{ el.innerHTML = '<div class="empty">Type to search (e.g. \u9752, blue, \u30bb\u30a4)</div>'; return; }}
+  const q = raw.toLowerCase();
+  const results = ALL.filter(k =>
+    k.char === raw ||
+    k.ref === raw ||
+    k.keyword.toLowerCase().includes(q) ||
+    k.on_reading.toLowerCase().includes(q) ||
+    k.kun_reading.toLowerCase().includes(q) ||
+    k.components.includes(raw) ||
+    k.groupName.toLowerCase().includes(q)
+  );
+  if (results.length === 0) {{ el.innerHTML = '<div class="empty">No results for "' + esc(raw) + '"</div>'; return; }}
+  el.innerHTML = results.slice(0, 300).map(k =>
+    `<div class="search-result" onclick="selectGroup('${{k.groupName.replace(/'/g, "\\\\'")}}')">
       <div class="sr-char">${{esc(k.char)}}</div>
       <div class="sr-info">
-        <span class="sr-keyword">${{esc(k.keyword)}}</span> &middot; On: ${{esc(k.on_reading)}}
-        <div class="sr-meta">Group: ${{esc(k.groupName)}} &middot; SRL: ${{k.srl}} &middot; Freq: ${{k.freq}}</div>
+        <span class="sr-keyword">${{esc(k.keyword)}}</span>
+        <div class="sr-detail">On: ${{esc(k.on_reading)}} &middot; Kun: ${{esc(k.kun_reading)}}</div>
+        <div class="sr-meta">Group: ${{esc(k.groupName)}} &middot; Components: ${{esc(k.components)}} &middot; SRL: ${{k.srl}}</div>
       </div>
     </div>`
-  ).join('') + (results.length > 200 ? `<div class="empty">${{results.length - 200}} more results...</div>` : '');
+  ).join('') + (results.length > 300 ? `<div class="empty">${{results.length - 300}} more...</div>` : '');
 }}
 
 function esc(s) {{ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }}
@@ -232,12 +266,22 @@ pre code {{ background: none; padding: 0; }}
 table {{ width: 100%; border-collapse: collapse; margin: 12px 0; }}
 th, td {{ padding: 8px 12px; border: 1px solid #2a2d3a; text-align: left; }}
 th {{ background: #1e2130; color: #e8eaf0; }}
+@media (max-width: 600px) {{
+  .header {{ flex-wrap: wrap; gap: 8px; padding: 12px 16px; }}
+  .header h1 {{ font-size: 16px; }}
+  .content {{ padding: 16px 12px; }}
+  h1 {{ font-size: 22px; }}
+  h2 {{ font-size: 18px; }}
+  h3 {{ font-size: 15px; }}
+  table {{ font-size: 13px; }}
+  th, td {{ padding: 6px 8px; }}
+}}
 </style>
 </head>
 <body>
 <div class="header">
   <h1>Research and Changelog</h1>
-  <a href="index.html">Back to Index</a>
+  <a href="index.html">&larr; Index</a>
 </div>
 <div class="content">
 {body}
@@ -321,10 +365,16 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans
 h1 {{ font-size: 48px; margin-bottom: 8px; color: #fff; }}
 .subtitle {{ color: #888; margin-bottom: 40px; font-size: 16px; }}
 .cards {{ display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }}
-.card {{ display: block; background: #161923; border: 1px solid #2a2d3a; border-radius: 12px; padding: 32px 40px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s; }}
+.card {{ display: block; background: #161923; border: 1px solid #2a2d3a; border-radius: 12px; padding: 32px 40px; text-decoration: none; color: inherit; transition: border-color 0.2s, transform 0.2s; min-width: 240px; }}
 .card:hover {{ border-color: #4a9eff; transform: translateY(-2px); }}
 .card-title {{ font-size: 18px; color: #4a9eff; margin-bottom: 8px; }}
 .card-stats {{ font-size: 14px; color: #888; }}
+@media (max-width: 600px) {{
+  .page {{ padding: 24px 16px; }}
+  h1 {{ font-size: 32px; }}
+  .cards {{ flex-direction: column; align-items: stretch; }}
+  .card {{ padding: 20px 24px; }}
+}}
 </style>
 </head>
 <body>
