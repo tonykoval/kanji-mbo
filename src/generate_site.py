@@ -193,6 +193,64 @@ if (groupNames.length > 0) selectGroup(groupNames[0]);
 </html>"""
 
 
+def generate_changelog(md_path, docs_dir):
+    import markdown
+
+    with open(md_path, "r", encoding="utf-8") as f:
+        md_text = f.read()
+
+    body = markdown.markdown(md_text, extensions=["tables", "fenced_code"])
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanji MBO - Research and Changelog</title>
+<style>
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1117; color: #c9cdd8; line-height: 1.7; font-size: 15px; }}
+.header {{ background: #161923; border-bottom: 1px solid #2a2d3a; padding: 16px 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 16px; }}
+.header h1 {{ font-size: 20px; color: #fff; }}
+.header a {{ color: #4a9eff; text-decoration: none; font-size: 14px; }}
+.header a:hover {{ text-decoration: underline; }}
+.content {{ max-width: 900px; margin: 0 auto; padding: 32px 24px; }}
+h1 {{ font-size: 28px; color: #e8eaf0; margin: 32px 0 16px; border-bottom: 1px solid #2a2d3a; padding-bottom: 8px; }}
+h2 {{ font-size: 22px; color: #e8eaf0; margin: 28px 0 12px; border-bottom: 1px solid #1e2130; padding-bottom: 6px; }}
+h3 {{ font-size: 17px; color: #4a9eff; margin: 24px 0 8px; }}
+h4 {{ font-size: 15px; color: #8ba0d4; margin: 16px 0 6px; }}
+p {{ margin: 8px 0; }}
+ul, ol {{ margin: 8px 0 8px 24px; }}
+li {{ margin: 4px 0; }}
+strong {{ color: #e8eaf0; }}
+a {{ color: #4a9eff; text-decoration: none; }}
+a:hover {{ text-decoration: underline; }}
+hr {{ border: none; border-top: 1px solid #2a2d3a; margin: 24px 0; }}
+code {{ background: #1e2130; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #d19a66; }}
+pre {{ background: #1e2130; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 12px 0; }}
+pre code {{ background: none; padding: 0; }}
+table {{ width: 100%; border-collapse: collapse; margin: 12px 0; }}
+th, td {{ padding: 8px 12px; border: 1px solid #2a2d3a; text-align: left; }}
+th {{ background: #1e2130; color: #e8eaf0; }}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Research and Changelog</h1>
+  <a href="index.html">Back to Index</a>
+</div>
+<div class="content">
+{body}
+</div>
+</body>
+</html>"""
+
+    changelog_path = os.path.join(docs_dir, "changelog.html")
+    with open(changelog_path, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"  -> changelog.html")
+
+
 def main():
     docs_dir = os.path.join(os.path.dirname(__file__), "..", "docs")
     os.makedirs(docs_dir, exist_ok=True)
@@ -226,6 +284,11 @@ def main():
         total = sum(len(v) for v in groups.values())
         print(f"  -> {html_name} ({len(groups)} groups, {total} kanji)")
         generated.append((html_name, title, len(groups), total))
+
+    # Generate changelog page from CHANGELOG.md
+    changelog_md = os.path.join(os.path.dirname(__file__), "..", "CHANGELOG.md")
+    if os.path.exists(changelog_md):
+        generate_changelog(changelog_md, docs_dir)
 
     # Generate index page
     index_html = generate_index(generated)
@@ -269,6 +332,14 @@ h1 {{ font-size: 48px; margin-bottom: 8px; color: #fff; }}
   <h1>\u6f22 Kanji MBO</h1>
   <p class="subtitle">Kanji categorization by meaning, reading, and component similarity</p>
   <div class="cards">{links}
+        <a href="documentation.html" class="card">
+          <div class="card-title">Documentation</div>
+          <div class="card-stats">Architecture &middot; Algorithm Rules &middot; API &middot; Glossary</div>
+        </a>
+        <a href="changelog.html" class="card">
+          <div class="card-title">Research &amp; Changelog</div>
+          <div class="card-stats">30 papers reviewed &middot; Algorithm improvements &middot; Open problems</div>
+        </a>
   </div>
 </div>
 </body>
