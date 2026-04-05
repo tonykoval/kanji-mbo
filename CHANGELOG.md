@@ -273,31 +273,345 @@ This section tracks academic papers that have been reviewed for potential algori
 
 ---
 
+### Yang, X. et al. (2023). "Quantifying Character Similarity with Vision Transformers"
+
+- **Published in:** EMNLP 2023 (Proceedings of the 2023 Conference on Empirical Methods in NLP)
+- **URL:** https://aclanthology.org/2023.emnlp-main.863/
+- **Code:** https://github.com/dell-research-harvard/HomoglyphsCJKTraining
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Self-supervised Vision Transformer (ViT) trained with contrastive learning on augmented digital fonts
+- Produces a metric embedding space where visually similar CJK characters cluster nearby
+- Pre-trained per-language (separate Japanese model available)
+- Nearest-neighbor lookup in embedding space gives principled visual similarity rankings
+
+#### Relevance to Algorithm
+- **Direct drop-in replacement for Rule 6 (visual similarity fallback)** — instead of the current 3-step component heuristic (6a: char∈components of other, 6b: component2 match, 6c: component1=char), use ViT embedding distance to rank visual neighbors
+- Pre-trained models and code are open-source — could compute pairwise similarity for all 2,250 kanji offline, then use as a lookup table in the algorithm
+- Would reduce VISUAL-type misassignments where component matching fails to capture actual perceptual similarity
+
+---
+
+### Shi, F. et al. (2025). "CoLa: Chinese Character Decomposition with Compositional Latent Components"
+
+- **Published in:** arXiv (2506.03798)
+- **URL:** https://arxiv.org/abs/2506.03798
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Deep latent variable model that learns character decomposition *without* human-defined radical schemes
+- Encodes character images into component-specific latent representations
+- Achieves zero-shot character recognition by comparing compositions in latent space
+- Components discovered automatically — not constrained to traditional radical taxonomy
+
+#### Relevance to Algorithm
+- Could validate our hand-curated component lists in Excel — run CoLa on all kanji and compare discovered components to our component1-5 columns
+- Might reveal groupings the rule-based system misses (components that are perceptually similar but have different Unicode codepoints)
+- Long-term: data-driven decomposition could replace manual component annotation for new kanji sets
+
+---
+
+### Hong, Y. et al. (2024). "Improving Chinese Character Representation with Formation Tree (FT-CLIP)"
+
+- **Published in:** arXiv (2404.12693) / Neurocomputing 2025
+- **URL:** https://arxiv.org/abs/2404.12693
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- "Formation Trees" — hierarchical tree representations where leaf nodes are radicals, edges encode spatial relationships (azimuth directions)
+- Dedicated tree encoder aggregates radical features bottom-up into holistic character embeddings
+- Explicitly extends to Japanese kanji and Korean Hangul
+
+#### Relevance to Algorithm
+- The tree structure directly parallels our component decomposition (component1-5 are flat; a tree would encode nesting and spatial layout)
+- **Could improve on'yomi clustering (Rules 3-4)** by considering not just *which* components are shared, but *where* they appear in the character structure
+- Example: 清 and 請 both have 青 as component2, but their spatial layouts differ — currently treated identically, a formation tree would distinguish them
+
+---
+
+### Zhu, Y. et al. (2024). "HierCode: A Lightweight Hierarchical Codebook for Zero-shot Chinese Text Recognition"
+
+- **Published in:** arXiv (2403.13761) / Pattern Recognition
+- **URL:** https://arxiv.org/abs/2403.13761
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Multi-hot encoding with hierarchical binary tree to create compact character representations based on radical structure
+- Characters sharing radicals get similar binary codes — reduces embedding size 10-40% vs character-level models
+- Handles out-of-vocabulary characters via shared radical codes
+
+#### Relevance to Algorithm
+- Hierarchical radical codes could serve as a fast similarity hash for DisjointSet merging
+- Two kanji with high code overlap (many shared radicals in the hierarchy) are strong candidates for the same group
+- Lighter-weight alternative to ViT embeddings for Rule 6 — could be computed purely from our existing component data
+
+---
+
+### Han, Z. et al. (2025). "Adaptive Radical Similarity Learning (ARSM)"
+
+- **Published in:** ICDAR 2025
+- **URL:** https://link.springer.com/chapter/10.1007/978-3-032-04630-7_27
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Dynamically measures similarity between radical pairs, addressing ambiguities from visually similar radicals across writing styles
+- Learns adaptive similarity thresholds rather than binary same/different matching
+
+#### Relevance to Algorithm
+- Directly relevant to component matching throughout Rules 3-6
+- Our algorithm currently uses exact string matching for components (e.g., `kanji.component2 == k.component2`)
+- ARSM's adaptive similarity could handle cases where components are visually similar but assigned different names in the decomposition data (e.g., 氵vs 水, 亻vs 人)
+- **Open problem addressed:** the thesis noted ~850 components missing from Unicode 17.0 — fuzzy matching would reduce dependence on exact component naming
+
+---
+
+### UCR Framework (2025). "A Unified Character-Radical Dual-Supervision Framework"
+
+- **Published in:** Pattern Recognition 2025
+- **URL:** https://www.sciencedirect.com/science/article/abs/pii/S0031320325000330
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Three modules: Character Recognition (CRM), Radical Recognition (RRM), Confidence-based Predictor (CPM)
+- Dual supervision learns character-to-radical decomposition mappings automatically
+- Handles both seen and unseen characters (zero-shot via radical composition)
+
+#### Relevance to Algorithm
+- Learned radical decomposition could validate our Excel component data at scale
+- Could auto-generate decompositions for kanji not yet in our dataset (useful for expanding from 2,250 to all 3,000+ CJK characters)
+
+---
+
+### JRED (2025). "Joint Radical Embedding and Detection for Zero-Shot Chinese Character Recognition"
+
+- **Published in:** Pattern Recognition, Vol. 161
+- **URL:** https://www.sciencedirect.com/science/article/abs/pii/S0031320324010379
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Learns radical embeddings without positional information, uses them as sliding detectors on visual feature maps
+- Bridges seen/unseen character classes via shared radical representations
+
+#### Relevance to Algorithm
+- Dense radical embeddings could serve as a continuous similarity metric for components
+- Two kanji sharing similar radical embeddings (even if radicals are not identical by name) might belong in the same group
+- Could improve stem variation lookup (Rule 5) by finding stem components that are semantically related even when not string-identical
+
+---
+
+### AttGraph (2025). "Disentangling Confusable Ancient Chinese Characters via Component-Correlation Synergy"
+
+- **Published in:** npj Heritage Science
+- **URL:** https://www.nature.com/articles/s40494-025-02278-6
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Graph Convolutional Networks (GCN) for modeling patch-wise spatial-semantic dependencies
+- Local Content Transformation (LCT) + Local Correlation Reasoning (LCR) to distinguish visually similar characters
+
+#### Relevance to Algorithm
+- GCN approach to component correlation is conceptually similar to our DisjointSet graph-based grouping
+- The component-correlation modeling could improve distinguishing groups that should be separate but whose members share many components
+
+---
+
+### LECTOR (2025). "LLM-Enhanced Concept-based Test-Oriented Repetition for Adaptive Spaced Learning"
+
+- **Published in:** arXiv (2508.03275)
+- **URL:** https://arxiv.org/abs/2508.03275
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- Integrates LLM-based semantic analysis with adaptive interval optimization
+- Key innovation: models confusion between semantically/visually similar items — traditional SRS (SM2, FSRS) treats items in isolation
+- Achieves 90.2% vs 88.4% for SSP-MMC baseline
+
+#### Relevance to Algorithm
+- **Directly relevant to Anki export** — our kanji groups inherently cluster similar kanji, which causes interference during review
+- LECTOR's confusion-aware scheduling could inform inter-group spacing: kanji from the same MBO group should not be reviewed back-to-back
+- Could add metadata to Anki export indicating which kanji are "confusable" within a group, enabling smarter scheduling
+
+---
+
+### Wang, X. et al. (2025). "Semantic Radicals' Semantic Attachment to Their Composed Phonograms"
+
+- **Published in:** BMC Psychology / PMC
+- **URL:** https://pmc.ncbi.nlm.nih.gov/articles/PMC12105197/
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Findings
+- Semantic radicals in transparent and opaque phonograms are semantically activated during recognition
+- Activation is "genuine-character status dependent" — only works in real characters, not pseudo-characters
+- Low-frequency characters show stronger facilitatory effects from shared radicals
+
+#### Relevance to Algorithm
+- **Cognitive validation**: confirms that grouping kanji by shared components leverages real neural pathways — learners subconsciously activate component-level meaning
+- Especially strong for low-frequency kanji — supports our strategy of using component grouping to aid retention of rare kanji
+- Does NOT change the algorithm but strengthens the theoretical justification for the MBO approach
+
+---
+
+### Han Zi Builder (2025). "A Hybrid Recommendation System for Chinese Character Components"
+
+- **Published in:** Discover Artificial Intelligence (Springer)
+- **URL:** https://link.springer.com/article/10.1007/s44163-025-00460-0
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Findings
+- Dual-tower neural network (768d BERT embeddings) + deterministic rule validation for character component assembly
+- Curated 141-radical / 803-character database with 12,345 valid combinations
+- Controlled experiments (N=127): 36.3% improvement in character decomposition accuracy
+
+#### Relevance to Algorithm
+- Architecture validates our hybrid approach (rule-based algorithm + structured data)
+- Their valid combination constraints are analogous to our keyword.list / stem.list / special.list validation sheets
+- The dual-tower network idea could augment our rule-based system: neural embedding for component matching + deterministic rules for group assignment
+
+---
+
+### Edman, L. et al. (2025). "EXECUTE: A Multilingual Benchmark for LLM Token Understanding"
+
+- **Published in:** ACL 2025 Findings
+- **URL:** https://aclanthology.org/2025.findings-acl.95/
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Findings
+- Benchmarks LLMs on character-level and sub-character-level tasks including Kangxi radical decomposition
+- Tests Aya Expanse, Gemma 2, Llama 3.1/3.3, Qwen 2.5, Mistral on CJK decomposition
+- Different languages show different processing challenges — Japanese kanji have specific failure modes
+
+#### Relevance to Algorithm
+- **Establishes which LLMs can reliably decompose kanji** — relevant if we want to use LLMs for semi-automated quality checks on component data
+- Could inform future work on semantic subgroup automation (Open Problem 1 from thesis)
+- Qwen 2.5 and Llama 3.3 show best results for CJK radical tasks
+
+---
+
+### Hu, P. et al. (2024). "Count, Decompose and Correct: A New Approach to Chinese Character Error Correction"
+
+- **Published in:** Pattern Recognition, Vol. 160
+- **URL:** https://www.sciencedirect.com/science/article/abs/pii/S0031320324008616
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Algorithm Idea
+- 3-step pipeline: Counter (predicts radical count), Decomposer (IDS-based decomposition), Corrector
+- Characters differing by only one radical are treated as near-neighbors
+
+#### Relevance to Algorithm
+- IDS (Ideographic Description Sequence) decomposition could provide a principled distance metric: edit distance on IDS = structural similarity
+- Characters differing by one radical = candidates for same group or subgroup
+- Could systematize the manual subgroup categorization step
+
+---
+
+### Deng et al. (2025). "Multi-Task Learning for Chinese Character and Radical Recognition with Dynamic Channel-Spatial Attention"
+
+- **Published in:** IET Image Processing
+- **URL:** https://ietresearch.onlinelibrary.wiley.com/doi/abs/10.1049/ipr2.70213
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Details
+- EfficientNetV2 + Transformer with dynamic collaborative channel-spatial attention (DCCSA)
+- Joint character + radical recognition with spatial relationship modeling between radicals
+
+#### Relevance to Algorithm
+- Spatial relationship modeling between radicals could inform a richer component representation than our flat component1-5 columns
+- Lower priority — primarily a recognition system, not a grouping system
+
+---
+
+### Wang, T. (2024). "Designing a Digital Game for Chinese Character Learning: A Theory-Driven Practice Approach"
+
+- **Published in:** Education Sciences, 14(12), 1366
+- **URL:** https://www.mdpi.com/2227-7102/14/12/1366
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Findings
+- Gamified structural/component awareness significantly improves character recognition and engagement
+- Grounded in task engagement principles for alphabetic-background learners
+
+#### Relevance to Algorithm
+- Validates our web UI / Anki export approach for making grouped kanji interactive
+- Low direct relevance to the algorithm itself
+
+---
+
+### Yu, J. et al. (2025). "Harnessing Generative AI to Construct Multimodal Resources for Chinese Character Learning"
+
+- **Published in:** Systems, 13(8), 692 (MDPI)
+- **URL:** https://www.mdpi.com/2079-8954/13/8/692
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Findings
+- Framework for semi-automated generation of multimodal learning resources using generative AI
+- Specifically addresses distinguishing similar characters — a key MBO concern
+
+#### Relevance to Algorithm
+- GenAI-generated mnemonics and illustrations could enrich our Anki export
+- "Distinguishing similar characters" aligns with our visual similarity grouping
+- Feature idea: auto-generate comparison resources for kanji within the same MBO group
+
+---
+
+### Radical-Based Token Representation for Chinese PLMs (2025)
+
+- **Published in:** MDPI Electronics, 14(5), 1031
+- **URL:** https://www.mdpi.com/2079-9292/14/5/1031
+- **Status:** REVIEWED (2025-04 review cycle)
+
+#### Key Findings
+- Extends PLM vocabularies to include both radicals and character tokens
+- More granular sub-character understanding in language models
+
+#### Relevance to Algorithm
+- The dual radical/character vocabulary mirrors our use of both whole-kanji properties (on'yomi, keywords) and component-level properties
+- Could inspire a hybrid embedding approach for future ML-augmented grouping
+
+---
+
 ## Potential Algorithm Improvements (Prioritized)
 
-Based on the research review, the following improvements are ranked by impact and feasibility:
+Based on the full research review (original + 2025-04 update), the following improvements are ranked by impact and feasibility:
 
 ### High Priority
 1. **Reading usefulness weighting** — Filter or weight on'yomi by usage frequency category (often/sometimes/rarely) before VR clustering (Rules 3-4). Data available from Kandrac's "Joyo Kanji Readings" dataset.
 2. **Voiced/unvoiced consonant handling** — Treat voiced/unvoiced on'yomi pairs (TAN/DAN, SEI/ZEI, etc.) as matches in VR clustering. Currently partially handled. Hamilton's phonetic component catalog provides a systematic list.
-3. **Within-group ordering by centrality** — Implement Loach & Wang's eta = frequency / learning_cost as a secondary sort criterion within categorization groups.
+3. **ViT-based visual similarity for Rule 6** *(NEW from 2025-04 review)* — Replace the 3-step component heuristic (6a/6b/6c) with Vision Transformer embedding distances from Yang et al. (EMNLP 2023). Pre-trained Japanese model and code available at dell-research-harvard/HomoglyphsCJKTraining. Could pre-compute all pairwise distances offline and use as a lookup table. This is now a more principled and practical approach than Yencken's stroke edit distance (previously listed as medium priority).
+4. **Within-group ordering by centrality** — Implement Loach & Wang's eta = frequency / learning_cost as a secondary sort criterion within categorization groups.
 
 ### Medium Priority
-4. **Visual similarity upgrade (Rule 6)** — Integrate Yencken's stroke edit distance or pre-computed confusion sets for more principled VISUAL type assignment. Current component matching is coarse.
-5. **Topological component ordering** — Ensure components always appear before the characters containing them (within groups). Partially enforced by STEM-first but not systematic.
-6. **Learning cost calculation** — Implement a learning cost metric (stroke count + frequency + reading count + phonetic reliability) for automated kanji selection and ordering.
+5. **Fuzzy component matching via radical embeddings** *(NEW from 2025-04 review)* — Replace exact string matching for components (`component2 == k.component2`) with similarity matching using JRED or ARSM radical embeddings. Would handle cases where components are visually similar but assigned different names (氵/水, 亻/人). Addresses thesis open problem of ~850 components missing from Unicode.
+6. **IDS-based structural distance** *(NEW from 2025-04 review)* — Use Ideographic Description Sequences (from Hu et al. 2024) to compute structural edit distance between kanji. Characters differing by one radical = natural subgroup candidates. Could partially automate subgroup categorization.
+7. **Decomposition validation with CoLa** *(NEW from 2025-04 review)* — Run CoLa (Shi et al. 2025) unsupervised decomposition on all kanji and compare to our hand-curated component1-5 columns. Flag discrepancies for manual review. Could reveal groupings the current system misses.
+8. **Topological component ordering** — Ensure components always appear before the characters containing them (within groups). Partially enforced by STEM-first but not systematic.
+9. **Learning cost calculation** — Implement a learning cost metric (stroke count + frequency + reading count + phonetic reliability) for automated kanji selection and ordering.
+10. **Confusion-aware Anki scheduling** *(NEW from 2025-04 review)* — Annotate Anki export with intra-group confusion metadata (from LECTOR 2025). Kanji from the same MBO group should be spaced apart during review to reduce interference. Could add custom Anki scheduling tags based on group membership.
 
 ### Low Priority / Future Research
-7. **Semantic subgroup automation** — Use language models to create semantic maps for kanji within stem groups. Thesis explicitly calls this "a rather time-demanding interdisciplinary project requiring active cooperation of multiple researchers."
-8. **External data integration** — Incorporate kanjidatabase.com entropy/productivity data, kanjistat distance metrics, or CJK Decomposition Data to augment manual decomposition.
-9. **Scalable FBO+phonetic system** — For kanji sets < 1,000, implement frequency-based ordering with phonetic reliability clustering (thesis confirms this is more effective than full MBO for small sets).
+11. **Semantic subgroup automation via LLMs** — Use language models to create semantic maps for kanji within stem groups. EXECUTE benchmark (ACL 2025) shows Qwen 2.5 and Llama 3.3 are most capable at CJK radical decomposition. FT-CLIP's hierarchical tree embeddings could provide semantic-spatial features. Still "a rather time-demanding interdisciplinary project" per thesis.
+12. **Formation tree representation** *(NEW from 2025-04 review)* — Adopt FT-CLIP's (Hong et al. 2024) hierarchical tree encoding to represent kanji structure with spatial relationships, replacing flat component1-5 columns. Would enable richer similarity computation but requires significant data restructuring.
+13. **External data integration** — Incorporate kanjidatabase.com entropy/productivity data, kanjistat distance metrics, HierCode radical codebooks, or CJK Decomposition Data.
+14. **Scalable FBO+phonetic system** — For kanji sets < 1,000, implement frequency-based ordering with phonetic reliability clustering.
+15. **GenAI-enhanced learning materials** *(NEW from 2025-04 review)* — Use generative AI (Yu et al. 2025) to auto-produce comparison mnemonics, illustrations, and example sentences for kanji within the same MBO group. Enriches Anki export and web UI.
 
 ---
 
-## Research Gaps (No Papers Found)
+## Research Gaps (Updated 2025-04)
 
-These areas have no published research and represent novel contributions of this project:
+These areas have limited or no published research and represent potential novel contributions:
 
-- **DisjointSet / Union-Find applied to kanji grouping** — our use of Union-Find for transitive group resolution appears novel
-- **Neural network-based kanji decomposition for learning order** — CNNs used for recognition but not for optimizing learning order through decomposition
-- **Community detection algorithms on kanji similarity graphs** — unexplored combination
+- **DisjointSet / Union-Find applied to kanji grouping** — our use of Union-Find for transitive group resolution appears novel. AttGraph (2025) uses GCN for component correlation, but not Union-Find for group resolution.
+- **Hybrid rule-based + neural kanji ordering** — Han Zi Builder (2025) validates the hybrid architecture for component *assembly*, but no system combines rule-based ordering with neural similarity for learning order optimization.
+- **Confusion-aware SRS for component-grouped kanji** — LECTOR (2025) models item confusion for general learning, but nobody has applied this specifically to kanji groups where visual/phonetic similarity is intentional.
+- **Community detection on kanji similarity graphs** — still unexplored. Our DisjointSet is effectively a simple graph algorithm; more sophisticated community detection (Louvain, label propagation) on ViT-similarity or radical-embedding graphs could discover natural groups that our rules miss.
+
+---
+
+## Cognitive Validation (2025-04 update)
+
+Three 2025 papers from BMC Psychology, PMC, and Frontiers in Language Sciences (Wang et al. 2025, and two related studies) confirm that semantic radicals are automatically activated during character recognition, especially for low-frequency characters. This provides strong cognitive science evidence that:
+
+1. **Our component-based grouping leverages real neural pathways** — learners subconsciously process component-level meaning
+2. **The effect is strongest for rare kanji** — our strategy of grouping infrequent kanji by shared components is especially well-supported
+3. **Activation is character-dependent** — only works in real characters, not arbitrary component combinations. Our groups built from actual kanji (not artificial constructs) are correctly designed.

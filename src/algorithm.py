@@ -4,76 +4,30 @@ import pandas
 from disjoint_set import DisjointSet
 
 from model import Source, Categorization, Constants, Kanji, ExcelColumn, Stem
+from data_loader import read_kanji, read_kanji_dataframe, read_kanji_char, read_excel
 from core import (
     is_empty_string, set_logging_level, logger,
-    read_kanji_dataframe as _read_kanji_dataframe,
     find_kanji_on_reading as _find_kanji_on_reading,
     find_cluster_1_2_3_components as _find_cluster_1_2_3_components,
 )
 
 
-def read_kanji(row: pandas.DataFrame) -> Kanji:
-    return Kanji(
-        ref=row[ExcelColumn.char],
-        char=row[ExcelColumn.char],
-        component1=row[ExcelColumn.component1],
-        component2=row[ExcelColumn.component2],
-        component3=row[ExcelColumn.component3],
-        component4=row[ExcelColumn.component4],
-        component5=row[ExcelColumn.component5],
-        on_reading=row[ExcelColumn.on_reading].split(ExcelColumn.on_reading_delimiter),
-        kun_reading=row[ExcelColumn.kun_reading],
-        keyword=row[ExcelColumn.keyword],
-        srl=int(row[ExcelColumn.srl]),
-        type=row[ExcelColumn.type],
-        freq=int(row[ExcelColumn.freq]),
-        tags=list(row[ExcelColumn.tags]),
-        group=row[ExcelColumn.group]
-    )
-
-
-def read_kanji_dataframe(dataframe: pandas.DataFrame) -> List[Kanji]:
-    return _read_kanji_dataframe(dataframe, read_kanji)
-
-
-def read_kanji_char(char: str, source: Source) -> Kanji:
-    row = source.df_kanji[source.df_kanji[ExcelColumn.char] == char].iloc[0]
-    return read_kanji(row)
-
-
-def read_excel(filename: str) -> Source:
-    df_kanji = pandas.read_excel(filename, sheet_name="MAIN")
-    df_kanji.columns = ExcelColumn.list_columns
-    df_kanji.fillna('', inplace=True)
-
-    df_keyword = pandas.read_excel(filename, sheet_name="keyword.list")
-
-    df_stem = pandas.read_excel(filename, sheet_name="stem.list")
-    df_stem.fillna('', inplace=True)
-
-    df_special = pandas.read_excel(filename, sheet_name="special.list")
-    df_special.fillna('', inplace=True)
-    return Source(df_kanji, df_keyword, df_stem, df_special)
-
-
 def init_categorization(source: Source) -> Categorization:
-    categorization = {}
+    cat = Categorization()
 
     for grp in source.df_keyword[ExcelColumn.group].unique():
-        categorization[grp] = []
+        cat.result.setdefault(grp, [])
 
     for grp in source.df_stem[ExcelColumn.group].unique():
-        categorization[grp] = []
+        cat.result.setdefault(grp, [])
 
-    categorization[Constants.other_grp] = []
-    categorization[Constants.special_grp] = []
-    queue = {}
+    cat.result.setdefault(Constants.other_grp, [])
+    cat.result.setdefault(Constants.special_grp, [])
 
     for kanji, key in source.df_special[[ExcelColumn.kanji, ExcelColumn.key]].values:
-        queue[key] = []
-        queue[key].append(read_kanji_char(kanji, source))
+        cat.queue[key].append(read_kanji_char(kanji, source))
 
-    return Categorization(categorization, queue)
+    return cat
 
 
 def find_keyword(kanji: Kanji, source: Source) -> Optional[str]:
@@ -102,22 +56,20 @@ def find_special(kanji: Kanji, source: Source) -> Optional[str]:
 
 def append_categorization(category: str, kanji: Kanji, is_first: bool, categorization: Categorization):
     if is_first:
-        if kanji.char in categorization.queue.keys():
+        if kanji.char in categorization.queue:
             for ch in pandas.Series(categorization.queue[kanji.char]).drop_duplicates().tolist():
-                new_kanji = ch
-                new_kanji.ref = kanji.char
-                categorization.result[category].insert(0, new_kanji)
+                ch.ref = kanji.char
+                categorization.result[category].insert(0, ch)
             categorization.result[category].insert(0, kanji)
             del categorization.queue[kanji.char]
         else:
             categorization.result[category].insert(0, kanji)
     else:
-        if kanji.char in categorization.queue.keys():
+        if kanji.char in categorization.queue:
             categorization.result[category].append(kanji)
             for ch in pandas.Series(categorization.queue[kanji.char]).drop_duplicates().tolist():
-                new_kanji = ch
-                new_kanji.ref = kanji.char
-                categorization.result[category].insert(0, new_kanji)
+                ch.ref = kanji.char
+                categorization.result[category].insert(0, ch)
             del categorization.queue[kanji.char]
         else:
             categorization.result[category].append(kanji)
@@ -314,7 +266,7 @@ def categorize_queue(categorization: Categorization):
         for kanji in categorization.queue[key]:
             ds.union(kanji.char, key)
 
-    print(ds)
+    logger.info(ds)
     for key in categorization.queue:
         for kanji in categorization.queue[key]:
             categorization.result[ds.find(kanji.char)].append(kanji)
@@ -369,3 +321,15 @@ def categorize_kanji(kanji: Kanji, categorization: Categorization, source: Sourc
                     fourth_rule(kanji, categorization, source)
                 else:
                     add_to_queue(kanji, max_srl_kanji.char, categorization)
+
+
+def run_pipeline(filepath: str, log_level=None) -> tuple:
+    """Run the full categorization pipeline. Returns (categorization, source)."""
+    import logging
+    set_logging_level(log_level or logging.WARNING)
+    source = read_excel(filepath)
+    categorization = init_categorization(source)
+    for kanji in read_kanji_dataframe(source.df_kanji):
+        categorize_kanji(kanji, categorization, source)
+    categorize_queue(categorization)
+    return categorization, source

@@ -14,11 +14,8 @@ categorization = algorithm.init_categorization(source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("麻", source), categorization, source)
 # algorithm.categorize_kanji(algorithm.read_kanji_char("摩", source), categorization, source)
 #
-for i in range(len(source.df_kanji)):
-    # print(i)
-    row = algorithm.read_kanji(source.df_kanji.loc[i])
-    # print(row.char)
-    algorithm.categorize_kanji(row, categorization, source)
+for kanji in algorithm.read_kanji_dataframe(source.df_kanji):
+    algorithm.categorize_kanji(kanji, categorization, source)
     print("-----------------")
 
 algorithm.categorize_queue(categorization)

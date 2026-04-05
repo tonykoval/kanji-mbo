@@ -1,2 +1,11 @@
 .ipynb_checkpoints
 /.idea/
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+*.apkg

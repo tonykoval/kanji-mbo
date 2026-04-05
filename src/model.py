@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 
 import pandas
-from typing import List
+from typing import Dict, List
 
 
 @dataclass
@@ -28,6 +29,16 @@ class Kanji:
     tags: List[str]
     group: str
 
+    @property
+    def components_str(self) -> str:
+        return " ".join(filter(None, [self.component1, self.component2,
+                                      self.component3, self.component4,
+                                      self.component5]))
+
+    @property
+    def on_reading_str(self) -> str:
+        return "\u3001".join(self.on_reading)
+
 
 @dataclass
 class Source:
@@ -39,8 +50,8 @@ class Source:
 
 @dataclass
 class Categorization:
-    result: dict
-    queue: dict
+    result: Dict[str, List[Kanji]] = field(default_factory=lambda: defaultdict(list))
+    queue: Dict[str, List[Kanji]] = field(default_factory=lambda: defaultdict(list))
 
 
 class Constants:

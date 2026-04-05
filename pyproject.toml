@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "kanji-mbo"
+version = "1.0.0"
+description = "Kanji categorization by meaning, reading, and component similarity"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+dependencies = [
+    "disjoint_set>=0.8.0",
+    "genanki>=0.13.0",
+    "numpy>=1.24.0",
+    "openpyxl>=3.1.0",
+    "pandas>=2.0.0",
+]
+
+[project.optional-dependencies]
+web = ["streamlit>=1.12.0", "altair<5"]
+dev = ["pytest>=7.0.0"]
+
+[project.scripts]
+kanji-mbo = "cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

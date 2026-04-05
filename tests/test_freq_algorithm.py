@@ -1,35 +1,13 @@
 import sys
 import os
-import importlib
 import unittest
 
 import pandas
 
-# Save original module state so we can restore after importing freq versions
-_saved_model = sys.modules.pop('model', None)
-_saved_algorithm = sys.modules.pop('algorithm', None)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-freq_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'freq')
-sys.path.insert(0, freq_path)
-
-import model as freq_model
-import algorithm as freq_algorithm
-
-# Stash freq modules under unique keys and restore originals
-sys.modules['freq_model'] = freq_model
-sys.modules['freq_algorithm'] = freq_algorithm
-del sys.modules['model']
-del sys.modules['algorithm']
-sys.path.remove(freq_path)
-
-if _saved_model is not None:
-    sys.modules['model'] = _saved_model
-if _saved_algorithm is not None:
-    sys.modules['algorithm'] = _saved_algorithm
-
-Kanji = freq_model.Kanji
-ExcelColumn = freq_model.ExcelColumn
-algorithm = freq_algorithm
+import freq_algorithm as algorithm
+from freq_algorithm import FreqKanji as Kanji, FreqExcelColumn as ExcelColumn
 
 
 def make_kanji(char, ref=None, comp1="", comp2="", comp3="",
@@ -151,9 +129,8 @@ class TestCategorizeKanji(unittest.TestCase):
         list_kanji = [k, k_ref]
         result = []
         algorithm.categorize_kanji(k, result, list_kanji)
-        # The result should have a new ref, but the original kanji in list_kanji must be unchanged
         self.assertEqual(result[0].ref, "時")
-        self.assertEqual(k.ref, "持")  # original NOT mutated
+        self.assertEqual(k.ref, "持")
 
     def test_no_onyomi_match_self_reference(self):
         k = make_kanji("出", comp2="山", onyomi=["シュツ"], freq=5)
